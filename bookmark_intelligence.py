@@ -3,22 +3,23 @@
 Bookmark Intelligence - Smart search, duplicate detection, and analysis tools
 """
 
-import os
-import logging
 import argparse
-from typing import List, Dict, Optional, Tuple
-from collections import defaultdict, Counter
+import logging
+import os
+from collections import Counter, defaultdict
+from typing import Dict, List, Optional, Tuple
+
 try:
-    from .shared.models import Bookmark, DuplicateGroup, SearchResult
-    from .shared.bookmark_loader import BookmarkLoader
-    from .shared.vector_store import VectorStore
-    from .shared.web_extractor import WebExtractor
+    from .core.bookmark_loader import BookmarkLoader
+    from .core.models import Bookmark, DuplicateGroup, SearchResult
+    from .core.vector_store import VectorStore
+    from .core.web_extractor import WebExtractor
 except ImportError:
     # Handle direct script execution
-    from shared.models import Bookmark, DuplicateGroup, SearchResult
-    from shared.bookmark_loader import BookmarkLoader
-    from shared.vector_store import VectorStore
-    from shared.web_extractor import WebExtractor
+    from core.bookmark_loader import BookmarkLoader
+    from core.models import Bookmark, DuplicateGroup, SearchResult
+    from core.vector_store import VectorStore
+    from core.web_extractor import WebExtractor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -524,7 +525,7 @@ def main():
 
             # Try to extract content
             try:
-    
+
                 web_extractor = WebExtractor()
                 title, description = web_extractor.extract_content(args.categorize)
                 temp_bookmark.title = title

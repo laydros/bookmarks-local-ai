@@ -4,17 +4,19 @@ Bookmark Enricher using RAG with Ollama and ChromaDB - Refactored Version
 """
 
 import json
-import ollama
-import time
-import os
 import logging
-import requests
+import os
+import time
 from typing import List, Optional
+
+import ollama
+import requests
 from bs4 import BeautifulSoup
-from shared.models import Bookmark
-from shared.bookmark_loader import BookmarkLoader
-from shared.vector_store import VectorStore
-from shared.web_extractor import WebExtractor
+
+from core.bookmark_loader import BookmarkLoader
+from core.models import Bookmark
+from core.vector_store import VectorStore
+from core.web_extractor import WebExtractor
 
 # Disable ChromaDB telemetry
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -113,7 +115,9 @@ class ProcessingSummary:
 
         # Web extraction failures
         if self.web_extraction_failures:
-            print(f"\n🌐 WEB EXTRACTION FAILURES ({len(self.web_extraction_failures)}):")
+            print(
+                f"\n🌐 WEB EXTRACTION FAILURES ({len(self.web_extraction_failures)}):"
+            )
             for i, failure in enumerate(self.web_extraction_failures, 1):
                 print(f"   {i}. {failure}")
 
