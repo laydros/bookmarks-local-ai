@@ -209,6 +209,52 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# Bookmark Intelligence Project Specific
+# =====================================
 
+# Personal bookmark data (exclude entire directories)
+json/
+bookmarks/
+data/
+my_bookmarks/
+
+# Specific bookmark file patterns to exclude
+*_bookmarks.json
+personal_*.json
+private_*.json
+
+# Keep example and test files (these override the above patterns)
+!examples/
+!tests/
+!**/fixtures/
+!sample*.json
+!example*.json
+!test*.json
+!demo*.json
+
+# ChromaDB vector store data
+chroma_db/
+.chroma/
+vector_store/
+
+# Ollama model cache and data
+.ollama/
+models/
+
+# Backup files created by the enricher
+*.backup
+backups/
+
+# Application output and temporary files
 test_output.json
+enriched_*.json
+output_*.json
+*.tmp
+
+# Configuration files with sensitive data
+config.json
+.env.local
+secrets.json
+
+# IDE and project specific
 .claude/
