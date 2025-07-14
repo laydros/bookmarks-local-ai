@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bookmarks-local-ai"
+version = "0.1.0"
+description = "A collection of scripts for managing bookmarks."
+readme = "README.md"
+license = { text = "BSD 3-Clause License" }
+authors = [
+    { name = "Jason Hamilton" }
+]
+dependencies = [
+    "requests==2.31.0",
+    "beautifulsoup4==4.12.2",
+    "chromadb==0.3.29",
+    "ollama==0.1.7",
+    "lxml"
+]
+
+[project.scripts]
+bookmark-enricher = "bookmarks.cli:enricher_main"
+bookmark-intelligence = "bookmarks.cli:intelligence_main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest==7.4.3",
+    "pytest-cov==4.1.0",
+    "pytest-mock==3.12.0",
+    "pytest-asyncio==0.21.1",
+    "black==23.11.0",
+    "ruff==0.1.15",
+    "mypy==1.7.1",
+    "isort==5.12.0"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["util/tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--verbose --tb=short --cov=util/shared --cov-report=term-missing --cov-report=html:htmlcov"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# Standard flake8 rules
+select = ["E", "F", "W"]
+# You can add more rule sets as needed:
+# "I" for isort-style import sorting
+# "N" for naming conventions
+# "B" for bugbear (common bugs)
+# "UP" for pyupgrade (modern Python idioms)
+
+[tool.black]
+line-length = 88

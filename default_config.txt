@@ -1,0 +1,65 @@
+# Bookmark Enricher Configuration
+
+models:
+  # Primary models to use
+  embedding: "nomic-embed-text"
+  llm: "llama3.1:8b"
+  
+  # Fallback models if primary fails
+  fallback_embedding: "mxbai-embed-large"
+  fallback_llm: "mistral:7b"
+  
+  # Ollama server URL
+  ollama_url: "http://localhost:11434"
+
+processing:
+  # Number of bookmarks to process in each batch
+  batch_size: 50
+  
+  # Delay between requests (seconds) - be nice to websites and Ollama
+  delay_between_requests: 0.5
+  
+  # Maximum retry attempts for failed operations
+  max_retries: 3
+  
+  # Request timeout (seconds)
+  timeout: 10
+  
+  # Web extraction timeout (seconds)
+  web_extraction_timeout: 10
+  
+  # Enable/disable web content extraction
+  enable_web_extraction: true
+
+output:
+  # Maintain consistent field ordering in JSON output
+  preserve_field_order: true
+  
+  # Create backups before processing
+  backup_original: true
+  
+  # Suffix for backup files
+  backup_suffix: ".backup"
+  
+  # JSON formatting
+  indent: 2
+  ensure_ascii: false
+
+quality:
+  # Minimum description length (characters)
+  min_description_length: 10
+  
+  # Maximum description length (characters)
+  max_description_length: 500
+  
+  # Minimum number of tags
+  min_tags: 1
+  
+  # Maximum number of tags
+  max_tags: 10
+  
+  # Validate URL format before processing
+  enable_url_validation: true
+  
+  # Standardize tags (lowercase, trim whitespace)
+  standardize_tags: true

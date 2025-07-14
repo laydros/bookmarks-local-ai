@@ -1,0 +1,16 @@
+[
+  {
+    "url": "https://python.org",
+    "title": "Python.org",
+    "description": "Official Python website",
+    "tags": ["python", "programming", "official"],
+    "type": "link"
+  },
+  {
+    "link": "https://github.com",
+    "title": "GitHub",
+    "excerpt": "Code hosting platform",
+    "tags": ["git", "code", "hosting"],
+    "type": "link"
+  }
+]
