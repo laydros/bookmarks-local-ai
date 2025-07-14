@@ -20,8 +20,8 @@ dependencies = [
 ]
 
 [project.scripts]
-bookmark-enricher = "bookmarks.cli:enricher_main"
-bookmark-intelligence = "bookmarks.cli:intelligence_main"
+bookmark-enricher = "bookmark_enricher:main"
+bookmark-intelligence = "bookmark_intelligence:main"
 
 [project.optional-dependencies]
 dev = [
@@ -36,11 +36,11 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-testpaths = ["util/tests"]
+testpaths = ["tests"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
-addopts = "--verbose --tb=short --cov=util/shared --cov-report=term-missing --cov-report=html:htmlcov"
+addopts = "--verbose --tb=short --cov=core --cov-report=term-missing --cov-report=html:htmlcov"
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",

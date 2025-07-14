@@ -59,45 +59,45 @@ A local RAG-powered system for enriching and analyzing bookmark collections usin
 
 Enrich bookmarks in a single file:
 ```bash
-python util/bookmark_enricher.py bookmarks.json
+python bookmark_enricher.py bookmarks.json
 ```
 
 Enrich all JSON files in a directory:
 ```bash
-python util/bookmark_enricher.py json/ --directory
+python bookmark_enricher.py json/ --directory
 ```
 
 Custom models:
 ```bash
-python util/bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm-model mistral:7b
+python bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm-model mistral:7b
 ```
 
 ### Bookmark Intelligence
 
 **Smart search** - Semantic search across your collection:
 ```bash
-python util/bookmark_intelligence.py json/ --search "Python debugging tools"
-python util/bookmark_intelligence.py json/ --search "machine learning" --results 5
+python bookmark_intelligence.py json/ --search "Python debugging tools"
+python bookmark_intelligence.py json/ --search "machine learning" --results 5
 ```
 
 **Find duplicates** - Detect duplicate bookmarks:
 ```bash
-python util/bookmark_intelligence.py json/ --duplicates
+python bookmark_intelligence.py json/ --duplicates
 ```
 
 **Analyze collection** - Get insights about your bookmarks:
 ```bash
-python util/bookmark_intelligence.py json/ --analyze
+python bookmark_intelligence.py json/ --analyze
 ```
 
 **Auto-categorization** - Suggest which file a bookmark belongs to:
 ```bash
-python util/bookmark_intelligence.py json/ --categorize "https://example.com"
+python bookmark_intelligence.py json/ --categorize "https://example.com"
 ```
 
 **Interactive mode** - Explore your bookmarks interactively:
 ```bash
-python util/bookmark_intelligence.py json/ --interactive
+python bookmark_intelligence.py json/ --interactive
 ```
 
 In interactive mode, available commands:
@@ -111,28 +111,26 @@ In interactive mode, available commands:
 ## Project Structure
 
 ```
-bookmarks/
-├── json/                          # Your bookmark JSON files
-├── util/
-│   ├── bookmark_enricher.py      # Main enrichment tool
-│   ├── bookmark_intelligence.py  # Smart search and analysis tool
-│   ├── shared/                    # Shared utilities
-│   │   ├── models.py             # Data models and validation
-│   │   ├── bookmark_loader.py    # File I/O operations
-│   │   ├── vector_store.py       # ChromaDB operations
-│   │   ├── web_extractor.py      # Web content extraction
-│   │   ├── backup_manager.py     # Backup utilities
-│   │   ├── config_manager.py     # Configuration management
-│   │   └── progress_tracker.py   # Progress tracking
-│   ├── tests/                     # Test suite
-│   │   ├── conftest.py           # Test configuration
-│   │   ├── test_models.py        # Data model tests
-│   │   ├── test_bookmark_loader.py # File I/O tests
-│   │   ├── test_vector_store.py  # Vector database tests
-│   │   ├── test_web_extractor.py # Web scraping tests
-│   │   └── fixtures/             # Test data
-│   └── sample_json/              # Example bookmark files
-├── pyproject.toml                 # Project configuration and dependencies
+bookmarks-local-ai/
+├── bookmark_enricher.py          # Main enrichment tool
+├── bookmark_intelligence.py      # Smart search and analysis tool
+├── core/                         # Shared utilities
+│   ├── models.py                 # Data models and validation
+│   ├── bookmark_loader.py        # File I/O operations
+│   ├── vector_store.py           # ChromaDB operations
+│   ├── web_extractor.py          # Web content extraction
+│   ├── backup_manager.py         # Backup utilities
+│   ├── config_manager.py         # Configuration management
+│   └── progress_tracker.py       # Progress tracking
+├── tests/                        # Test suite
+│   ├── conftest.py               # Test configuration
+│   ├── test_models.py            # Data model tests
+│   ├── test_bookmark_loader.py   # File I/O tests
+│   ├── test_vector_store.py      # Vector database tests
+│   ├── test_web_extractor.py     # Web scraping tests
+│   ├── test_enhanced_enricher.py # Enhanced enrichment tests
+│   └── fixtures/                 # Test data
+├── pyproject.toml                # Project configuration and dependencies
 └── CLAUDE.md                     # Claude Code instructions
 ```
 
@@ -161,10 +159,10 @@ The system supports flexible bookmark formats:
 pytest
 
 # Run with coverage
-pytest --cov=util/shared --cov-report=html
+pytest --cov=core --cov-report=html
 
 # Run specific test file
-pytest util/tests/test_models.py
+pytest tests/test_models.py
 
 # Run only fast tests (exclude slow integration tests)
 pytest -m "not slow"
@@ -174,16 +172,16 @@ pytest -m "not slow"
 
 ```bash
 # Format code
-black util/
+black .
 
 # Check style (using ruff instead of flake8)
-ruff check util/
+ruff check .
 
 # Auto-fix issues
-ruff check --fix util/
+ruff check --fix .
 
 # Type checking
-mypy util/
+mypy core/
 ```
 
 ### Test Structure
@@ -260,7 +258,7 @@ ollama list
 1. Check the logs for specific error messages
 2. Verify Ollama is running: `curl http://localhost:11434/api/tags`
 3. Test with a small sample file first
-4. Run tests to verify installation: `pytest util/tests/`
+4. Run tests to verify installation: `pytest tests/`
 
 ## Dependencies
 
@@ -302,7 +300,7 @@ This project uses `pyproject.toml` for dependency management. Key dependencies i
 
 1. Set up development environment: `pip install -e .[dev]`
 2. Run tests: `pytest`
-3. Check code style: `black util/ && ruff check util/`
+3. Check code style: `black . && ruff check .`
 4. Add tests for new features
 5. Update documentation
 
