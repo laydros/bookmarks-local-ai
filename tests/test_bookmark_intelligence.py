@@ -9,7 +9,7 @@ import os
 import sys
 import subprocess
 from unittest.mock import Mock, patch, MagicMock
-from util.bookmark_intelligence import BookmarkIntelligence
+from bookmark_intelligence import BookmarkIntelligence
 from core.models import Bookmark, SearchResult, SimilarBookmark, DuplicateGroup
 
 
@@ -59,7 +59,7 @@ class TestBookmarkIntelligence:
         assert result is False
         assert len(intelligence.bookmarks) == 0
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_ensure_indexed_success(self, mock_vector_store, sample_bookmarks):
         """Test successful indexing of bookmarks."""
         mock_vector_store_instance = Mock()
@@ -77,7 +77,7 @@ class TestBookmarkIntelligence:
             sample_bookmarks
         )
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_ensure_indexed_failure(self, mock_vector_store, sample_bookmarks):
         """Test indexing failure."""
         mock_vector_store_instance = Mock()
@@ -92,7 +92,7 @@ class TestBookmarkIntelligence:
         assert result is False
         assert intelligence.indexed is False
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_search_success(self, mock_vector_store, sample_bookmarks):
         """Test successful search."""
         # Mock vector store search
@@ -123,7 +123,7 @@ class TestBookmarkIntelligence:
         assert result.similar_bookmarks[0].similarity_score == 0.95
         mock_vector_store_instance.search.assert_called_once_with("python", 5)
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_search_indexing_failure(self, mock_vector_store, sample_bookmarks):
         """Test search when indexing fails."""
         mock_vector_store_instance = Mock()
@@ -139,7 +139,7 @@ class TestBookmarkIntelligence:
         assert len(result.similar_bookmarks) == 0
         assert result.total_results == 0
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_search_exception_handling(self, mock_vector_store, sample_bookmarks):
         """Test search exception handling."""
         mock_vector_store_instance = Mock()
@@ -345,7 +345,7 @@ class TestCollectionAnalysis:
 class TestAutoCategorization:
     """Test auto-categorization functionality."""
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_suggest_categorization_success(self, mock_vector_store, sample_bookmarks):
         """Test successful categorization suggestion."""
         # Mock search result
@@ -373,7 +373,7 @@ class TestAutoCategorization:
         assert suggestions[0][0] == "test.json"  # source_file from sample bookmarks
         assert 0 < suggestions[0][1] <= 1  # confidence score
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_suggest_categorization_no_similar(self, mock_vector_store):
         """Test categorization when no similar bookmarks found."""
         mock_search_result = SearchResult(
@@ -393,7 +393,7 @@ class TestAutoCategorization:
 
         assert len(suggestions) == 0
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_suggest_categorization_multiple_files(self, mock_vector_store):
         """Test categorization with bookmarks from multiple files."""
         bookmarks = [
@@ -441,7 +441,7 @@ class TestAutoCategorization:
         for filename, confidence in suggestions:
             assert 0 <= confidence <= 1
 
-    @patch("util.bookmark_intelligence.VectorStore")
+    @patch("bookmark_intelligence.VectorStore")
     def test_suggest_categorization_indexing_failure(self, mock_vector_store):
         """Test categorization when indexing fails."""
         mock_vector_store_instance = Mock()
@@ -546,7 +546,7 @@ class TestInteractiveMode:
         finally:
             sys.stdout = sys.__stdout__
 
-    @patch("util.bookmark_intelligence.WebExtractor")
+    @patch("bookmark_intelligence.WebExtractor")
     def test_interactive_categorize_formatting(
         self, mock_web_extractor, sample_bookmarks
     ):
@@ -585,11 +585,11 @@ class TestCLIIntegration:
 
     def test_main_function_imports(self):
         """Test that main function can be imported."""
-        from util.bookmark_intelligence import main
+        from bookmark_intelligence import main
 
         assert callable(main)
 
-    @patch("util.bookmark_intelligence.BookmarkIntelligence")
+    @patch("bookmark_intelligence.BookmarkIntelligence")
     @patch("os.path.exists")
     def test_search_command_line_parsing(self, mock_exists, mock_intelligence_class):
         """Test command line argument parsing for search."""
@@ -606,7 +606,7 @@ class TestCLIIntegration:
     def test_argument_parser_structure(self):
         """Test that argument parser has expected arguments."""
         import argparse
-        from util.bookmark_intelligence import main
+        from bookmark_intelligence import main
 
         # This tests the structure exists
         # Full CLI testing would require more complex mocking
@@ -715,7 +715,7 @@ class TestCLICommands:
         else:
             python_executable = sys.executable
             
-        cmd = [python_executable, 'util/bookmark_intelligence.py'] + args
+        cmd = [python_executable, 'bookmark_intelligence.py'] + args
         
         result = subprocess.run(
             cmd,
@@ -786,7 +786,7 @@ class TestCLICommands:
         assert "github.com" in result.stdout
         assert "stackoverflow.com" in result.stdout
     
-    @patch('util.bookmark_intelligence.VectorStore')
+    @patch('bookmark_intelligence.VectorStore')
     def test_cli_search_command(self, mock_vector_store, tmp_path):
         """Test --search CLI command."""
         # Create test data
@@ -824,8 +824,8 @@ class TestCLICommands:
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
         
         # Mock to avoid web extraction and vector store
-        with patch('util.bookmark_intelligence.VectorStore') as mock_vs, \
-             patch('util.bookmark_intelligence.WebExtractor') as mock_we:
+        with patch('bookmark_intelligence.VectorStore') as mock_vs, \
+             patch('bookmark_intelligence.WebExtractor') as mock_we:
             
             mock_vs_instance = Mock()
             mock_vs_instance.rebuild_from_bookmarks.return_value = True
@@ -971,7 +971,7 @@ class TestCLICommands:
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
         
         # Mock to avoid Ollama dependency
-        with patch('util.bookmark_intelligence.VectorStore') as mock_vs:
+        with patch('bookmark_intelligence.VectorStore') as mock_vs:
             mock_vs_instance = Mock()
             mock_vs_instance.rebuild_from_bookmarks.return_value = True
             mock_vs_instance.search.return_value = SearchResult("test", [], 0)

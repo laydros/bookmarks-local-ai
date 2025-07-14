@@ -7,7 +7,7 @@ import json
 import tempfile
 import os
 from typing import List
-from util.shared.models import Bookmark
+from core.models import Bookmark
 
 
 @pytest.fixture
