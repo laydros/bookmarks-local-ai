@@ -32,6 +32,7 @@ read:
   - pyproject.toml
   - requirements.txt
   - CONTRIBUTING.md
+  - CONVENTIONS.md
   - CHANGELOG.md
 
 ##########################################################
