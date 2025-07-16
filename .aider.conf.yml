@@ -1,0 +1,19 @@
+# .aider.conf.yml
+
+# Default model to use when you run "aider chat"
+model: "ollama_chat/stable-code:3b"
+
+# Which files/folders to ignore when indexing
+ignore:
+  - ".venv/"
+  - "node_modules/"
+  - "dist/"
+  - "__pycache__/"
+
+# tool:
+#   # Commands Aider will use for your test suite and linter.
+#   # It runs these via a login shell so they can source your venv.
+#   checks:
+#     test: "bash -ic 'source .venv/bin/activate && pytest --maxfail=1 -q'"
+#     lint: "bash -ic 'source .venv/bin/activate && flake8 .'"
+

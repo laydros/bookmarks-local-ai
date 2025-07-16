@@ -258,3 +258,6 @@ secrets.json
 
 # IDE and project specific
 .claude/
+.aider*
+!.aiderignore
+!.aider.conf.yml

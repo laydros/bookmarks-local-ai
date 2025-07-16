@@ -1,0 +1,190 @@
+# Aider ignore file - tells aider which files/directories to ignore
+# Place this file at the root of your git repository
+
+##########################################################
+# Python
+##########################################################
+
+# Virtual environments
+venv/
+env/
+.env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+##########################################################
+# Node.js / JavaScript
+##########################################################
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+##########################################################
+# IDEs and Editors
+##########################################################
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+##########################################################
+# OS Generated Files
+##########################################################
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+##########################################################
+# Logs and Databases
+##########################################################
+
+*.log
+*.sql
+*.sqlite
+*.db
+
+##########################################################
+# Documentation Build Files
+##########################################################
+
+docs/_build/
+docs/build/
+site/
+
+##########################################################
+# Environment and Config Files
+##########################################################
+
+.env
+.env.local
+.env.*.local
+.secrets
+*.pem
+*.key
+
+##########################################################
+# Large Data Files
+##########################################################
+
+*.csv
+*.parquet
+*.h5
+*.hdf5
+data/
+datasets/
+*.pkl
+*.pickle
+
+##########################################################
+# Model and Checkpoint Files
+##########################################################
+
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+models/
+checkpoints/
+
+##########################################################
+# Temporary and Cache Files
+##########################################################
+
+tmp/
+temp/
+.tmp/
+.cache/
+*.tmp
+*.temp
+
+##########################################################
+# Package Manager Files
+##########################################################
+
+poetry.lock  # Optional: remove if you want aider to see lock files
+Pipfile.lock  # Optional: remove if you want aider to see lock files
