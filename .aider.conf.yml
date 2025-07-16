@@ -1,19 +1,93 @@
-# .aider.conf.yml
+# Aider configuration for local development with Ollama
+# Place this file at the root of your git repository
 
-# Default model to use when you run "aider chat"
-model: "ollama_chat/stable-code:3b"
+##########################################################
+# Model Configuration
+##########################################################
 
-# Which files/folders to ignore when indexing
-ignore:
-  - ".venv/"
-  - "node_modules/"
-  - "dist/"
-  - "__pycache__/"
+# Primary model - Qwen2.5-Coder 14B is excellent for M3 Pro with 18GB RAM
+model: ollama_chat/qwen2.5-coder:14b
 
-# tool:
-#   # Commands Aider will use for your test suite and linter.
-#   # It runs these via a login shell so they can source your venv.
-#   checks:
-#     test: "bash -ic 'source .venv/bin/activate && pytest --maxfail=1 -q'"
-#     lint: "bash -ic 'source .venv/bin/activate && flake8 .'"
+# Model aliases for easy switching
+alias:
+  - "main:ollama_chat/qwen2.5-coder:14b"
+  - "fast:ollama_chat/qwen2.5-coder:7b"
+  - "large:ollama_chat/qwen2.5-coder:32b"
 
+##########################################################
+# Ollama Environment Configuration
+##########################################################
+
+set-env:
+  - OLLAMA_API_BASE=http://127.0.0.1:11434
+  - OLLAMA_CONTEXT_LENGTH=32768  # Good context window for 14B model
+
+##########################################################
+# Files to Always Include
+##########################################################
+
+# Read-only files that provide project context
+read:
+  - README.md
+  - pyproject.toml
+  - requirements.txt
+  - CONTRIBUTING.md
+  - CHANGELOG.md
+
+##########################################################
+# Git and Repository Settings
+##########################################################
+
+# Enable auto-commits for changes
+auto-commits: true
+
+# Add .aider* files to .gitignore automatically
+gitignore: true
+
+# Enable repo mapping for better context (adjust tokens as needed)
+map-tokens: 2048
+map-refresh: auto
+
+##########################################################
+# Common Ignore Patterns
+##########################################################
+
+# Specify the aider ignore file
+aiderignore: .aiderignore
+
+##########################################################
+# Development Settings
+##########################################################
+
+# Show diffs when committing
+show-diffs: true
+
+# Enable file watching for better integration
+watch-files: true
+
+# Suggest shell commands when appropriate
+suggest-shell-commands: true
+
+# Use multiline input mode
+multiline: false
+
+# Enable notifications when responses are ready
+notifications: false
+
+##########################################################
+# Output and Display Settings
+##########################################################
+
+# Use colors suitable for terminal
+pretty: true
+stream: true
+
+# Code highlighting theme (options: default, monokai, solarized-dark, etc.)
+code-theme: monokai
+
+##########################################################
+# Editor Configuration
+##########################################################
+
+# Set preferred editor for /editor command
+# editor: code --wait  # Uncomment and adjust for your preferred editor
