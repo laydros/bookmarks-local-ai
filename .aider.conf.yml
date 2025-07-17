@@ -28,12 +28,10 @@ set-env:
 
 # Read-only files that provide project context
 read:
-  - README.md
-  - pyproject.toml
-  - requirements.txt
-  - CONTRIBUTING.md
-  - CONVENTIONS.md
-  - CHANGELOG.md
+  - CONVENTIONS.md        # Project coding standards and conventions
+  - README.md             # Project overview and setup instructions
+  - pyproject.toml        # Dependencies and project metadata
+  - CONTRIBUTING.md       # Contribution guidelines (if present)
 
 ##########################################################
 # Git and Repository Settings
