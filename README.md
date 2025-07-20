@@ -10,6 +10,7 @@ A local RAG-powered system for enriching and analyzing bookmark collections usin
 - **Duplicate Detection**: Find potential duplicate bookmarks
 - **Gap Analysis**: Identify missing topics in your collection
 - **Auto-Categorization**: Suggest which file/category new bookmarks belong in
+- **Bookmark Importer**: Load new bookmarks from JSON, HTML, Markdown, or plain URL lists and verify links
 
 ## Requirements
 
@@ -93,6 +94,13 @@ python bookmark_intelligence.py json/ --analyze
 **Auto-categorization** - Suggest which file a bookmark belongs to:
 ```bash
 python bookmark_intelligence.py json/ --categorize "https://example.com"
+```
+
+**Import new bookmarks** - Validate and categorize new entries:
+```bash
+python bookmark_importer.py json/ new_bookmarks.json
+# Or import from browser HTML/Markdown/plain text
+python bookmark_importer.py json/ exported_bookmarks.html
 ```
 
 **Interactive mode** - Explore your bookmarks interactively:
