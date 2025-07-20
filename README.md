@@ -110,7 +110,7 @@ python bookmark_intelligence.py json/ --interactive
 
 In interactive mode, available commands:
 - `search <query>` - Search bookmarks
-- `duplicates` - Find duplicate bookmarks  
+- `duplicates` - Find and optionally remove duplicate bookmarks
 - `analyze` - Analyze collection statistics
 - `categorize <url>` - Suggest category for URL
 - `help` - Show available commands

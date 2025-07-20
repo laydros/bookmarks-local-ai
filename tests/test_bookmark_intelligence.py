@@ -493,7 +493,7 @@ class TestInteractiveMode:
         finally:
             sys.stdout = sys.__stdout__
 
-    def test_interactive_duplicates_formatting(self):
+    def test_interactive_duplicates_formatting(self, monkeypatch):
         """Test interactive duplicates output formatting."""
         bookmarks = [
             Bookmark(url="https://example.com", title="Example 1"),
@@ -510,6 +510,8 @@ class TestInteractiveMode:
         captured_output = io.StringIO()
         sys.stdout = captured_output
 
+        monkeypatch.setattr("builtins.input", lambda _: "0")
+
         try:
             intelligence._interactive_duplicates()
             output = captured_output.getvalue()
@@ -521,6 +523,35 @@ class TestInteractiveMode:
             assert "Example 2" in output
         finally:
             sys.stdout = sys.__stdout__
+
+    def test_interactive_duplicates_removal(self, monkeypatch):
+        """Test removing a duplicate interactively."""
+        bookmarks = [
+            Bookmark(url="https://example.com", title="Example 1"),
+            Bookmark(url="https://example.com", title="Example 2"),
+        ]
+
+        intelligence = BookmarkIntelligence()
+        intelligence.bookmarks = bookmarks
+
+        import io
+        import sys
+
+        captured_output = io.StringIO()
+        sys.stdout = captured_output
+
+        inputs = iter(["1"])
+        monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+        try:
+            intelligence._interactive_duplicates()
+            output = captured_output.getvalue()
+        finally:
+            sys.stdout = sys.__stdout__
+
+        assert "Removed 'Example 1'" in output
+        assert len(intelligence.bookmarks) == 1
+        assert intelligence.bookmarks[0].title == "Example 2"
 
     def test_interactive_analyze_formatting(self, sample_bookmarks):
         """Test interactive analyze output formatting."""
@@ -679,54 +710,65 @@ def mixed_enrichment_bookmarks():
 
 class TestCLICommands:
     """Test CLI command functionality using subprocess."""
-    
+
     def create_test_bookmark_file(self, tmp_path, bookmarks_data):
         """Helper to create temporary JSON file with bookmark data."""
         test_file = tmp_path / "test_bookmarks.json"
         test_file.write_text(json.dumps(bookmarks_data, indent=2))
         return str(test_file)
-    
+
     def create_test_bookmark_directory(self, tmp_path):
         """Helper to create temporary directory with multiple bookmark files."""
         test_dir = tmp_path / "test_bookmarks"
         test_dir.mkdir()
-        
+
         # Create multiple test files
         file1_data = [
-            {"url": "https://python.org", "title": "Python", "description": "Python language", "tags": ["python"]},
-            {"url": "https://github.com", "title": "GitHub", "description": "Code hosting", "tags": ["git", "code"]}
+            {
+                "url": "https://python.org",
+                "title": "Python",
+                "description": "Python language",
+                "tags": ["python"],
+            },
+            {
+                "url": "https://github.com",
+                "title": "GitHub",
+                "description": "Code hosting",
+                "tags": ["git", "code"],
+            },
         ]
-        
+
         file2_data = [
-            {"url": "https://stackoverflow.com", "title": "Stack Overflow", "description": "Q&A site", "tags": ["programming"]}
+            {
+                "url": "https://stackoverflow.com",
+                "title": "Stack Overflow",
+                "description": "Q&A site",
+                "tags": ["programming"],
+            }
         ]
-        
+
         (test_dir / "file1.json").write_text(json.dumps(file1_data, indent=2))
         (test_dir / "file2.json").write_text(json.dumps(file2_data, indent=2))
-        
+
         return str(test_dir)
-    
+
     def run_cli_command(self, args, timeout=30):
         """Helper to run CLI command and return result."""
         # Use the virtual environment Python if available
-        python_cmd = os.environ.get('VIRTUAL_ENV', '')
-        if python_cmd and os.path.exists(os.path.join(python_cmd, 'bin', 'python')):
-            python_executable = os.path.join(python_cmd, 'bin', 'python')
+        python_cmd = os.environ.get("VIRTUAL_ENV", "")
+        if python_cmd and os.path.exists(os.path.join(python_cmd, "bin", "python")):
+            python_executable = os.path.join(python_cmd, "bin", "python")
         else:
             python_executable = sys.executable
-            
-        cmd = [python_executable, 'bookmark_intelligence.py'] + args
-        
+
+        cmd = [python_executable, "bookmark_intelligence.py"] + args
+
         result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            cwd='.'
+            cmd, capture_output=True, text=True, timeout=timeout, cwd="."
         )
-        
+
         return result
-    
+
     def test_cli_duplicates_command(self, tmp_path):
         """Test --duplicates CLI command."""
         # Create test data with duplicates
@@ -735,34 +777,44 @@ class TestCLICommands:
             {"url": "https://example.com", "title": "Example 2"},
             {"url": "https://different.com", "title": "Same Title"},
             {"url": "https://another.com", "title": "Same Title"},
-            {"url": "https://unique.com", "title": "Unique Title"}
+            {"url": "https://unique.com", "title": "Unique Title"},
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Run CLI command
-        result = self.run_cli_command([test_file, '--duplicates'])
-        
+        result = self.run_cli_command([test_file, "--duplicates"])
+
         # Verify results
         assert result.returncode == 0
         assert "Finding duplicates..." in result.stdout
         assert "duplicate groups" in result.stdout
         assert "exact_url" in result.stdout or "similar_title" in result.stdout
-    
+
     def test_cli_analyze_command(self, tmp_path):
         """Test --analyze CLI command."""
         # Create test data
         test_data = [
-            {"url": "https://python.org", "title": "Python", "description": "Python language", "tags": ["python"]},
-            {"url": "https://github.com", "title": "GitHub", "description": "Code hosting", "tags": ["git", "code"]},
-            {"url": "https://example.com", "title": "Example"}  # Unenriched
+            {
+                "url": "https://python.org",
+                "title": "Python",
+                "description": "Python language",
+                "tags": ["python"],
+            },
+            {
+                "url": "https://github.com",
+                "title": "GitHub",
+                "description": "Code hosting",
+                "tags": ["git", "code"],
+            },
+            {"url": "https://example.com", "title": "Example"},  # Unenriched
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Run CLI command
-        result = self.run_cli_command([test_file, '--analyze'])
-        
+        result = self.run_cli_command([test_file, "--analyze"])
+
         # Verify results
         assert result.returncode == 0
         assert "Analyzing collection..." in result.stdout
@@ -770,14 +822,14 @@ class TestCLICommands:
         assert "Enriched: 2" in result.stdout
         assert "Top domains:" in result.stdout
         assert "Top tags:" in result.stdout
-    
+
     def test_cli_analyze_directory(self, tmp_path):
         """Test --analyze CLI command with directory."""
         test_dir = self.create_test_bookmark_directory(tmp_path)
-        
+
         # Run CLI command
-        result = self.run_cli_command([test_dir, '--analyze'])
-        
+        result = self.run_cli_command([test_dir, "--analyze"])
+
         # Verify results
         assert result.returncode == 0
         assert "Analyzing collection..." in result.stdout
@@ -785,70 +837,87 @@ class TestCLICommands:
         assert "python.org" in result.stdout
         assert "github.com" in result.stdout
         assert "stackoverflow.com" in result.stdout
-    
-    @patch('bookmark_intelligence.VectorStore')
+
+    @patch("bookmark_intelligence.VectorStore")
     def test_cli_search_command(self, mock_vector_store, tmp_path):
         """Test --search CLI command."""
         # Create test data
         test_data = [
-            {"url": "https://python.org", "title": "Python", "description": "Python language", "tags": ["python"]},
+            {
+                "url": "https://python.org",
+                "title": "Python",
+                "description": "Python language",
+                "tags": ["python"],
+            },
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Mock vector store to avoid Ollama dependency
         mock_vector_store_instance = Mock()
         mock_vector_store_instance.rebuild_from_bookmarks.return_value = True
         mock_vector_store_instance.search.return_value = SearchResult(
-            query="python",
-            similar_bookmarks=[],
-            total_results=0
+            query="python", similar_bookmarks=[], total_results=0
         )
         mock_vector_store.return_value = mock_vector_store_instance
-        
+
         # Run CLI command
-        result = self.run_cli_command([test_file, '--search', 'python'])
-        
+        result = self.run_cli_command([test_file, "--search", "python"])
+
         # Verify results
         assert result.returncode == 0
         assert "Searching for: 'python'" in result.stdout
-        assert ("No results found." in result.stdout or "Found" in result.stdout)
-    
+        assert "No results found." in result.stdout or "Found" in result.stdout
+
     def test_cli_categorize_command(self, tmp_path):
         """Test --categorize CLI command."""
         # Create test data
         test_data = [
-            {"url": "https://python.org", "title": "Python", "description": "Python language", "tags": ["python"]},
+            {
+                "url": "https://python.org",
+                "title": "Python",
+                "description": "Python language",
+                "tags": ["python"],
+            },
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Mock to avoid web extraction and vector store
-        with patch('bookmark_intelligence.VectorStore') as mock_vs, \
-             patch('bookmark_intelligence.WebExtractor') as mock_we:
-            
+        with patch("bookmark_intelligence.VectorStore") as mock_vs, patch(
+            "bookmark_intelligence.WebExtractor"
+        ) as mock_we:
+
             mock_vs_instance = Mock()
             mock_vs_instance.rebuild_from_bookmarks.return_value = True
             mock_vs_instance.search.return_value = SearchResult("test", [], 0)
             mock_vs.return_value = mock_vs_instance
-            
+
             mock_we_instance = Mock()
-            mock_we_instance.extract_content.return_value = ("Test Title", "Test Description")
+            mock_we_instance.extract_content.return_value = (
+                "Test Title",
+                "Test Description",
+            )
             mock_we.return_value = mock_we_instance
-            
+
             # Run CLI command
-            result = self.run_cli_command([test_file, '--categorize', 'https://example.com'])
-            
+            result = self.run_cli_command(
+                [test_file, "--categorize", "https://example.com"]
+            )
+
             # Verify results
             assert result.returncode == 0
             assert "Suggesting category for: https://example.com" in result.stdout
-            assert ("No suggestions available." in result.stdout or "Suggested categories:" in result.stdout)
-    
+            assert (
+                "No suggestions available." in result.stdout
+                or "Suggested categories:" in result.stdout
+            )
+
     def test_cli_help_command(self, tmp_path):
         """Test --help CLI command."""
         # Run CLI command
-        result = self.run_cli_command(['--help'])
-        
+        result = self.run_cli_command(["--help"])
+
         # Verify results
         assert result.returncode == 0
         assert "Bookmark Intelligence" in result.stdout
@@ -857,129 +926,146 @@ class TestCLICommands:
         assert "--search" in result.stdout
         assert "--interactive" in result.stdout
         assert "--categorize" in result.stdout
-    
+
     def test_cli_invalid_path(self, tmp_path):
         """Test CLI with non-existent path."""
         # Run CLI command with non-existent path
-        result = self.run_cli_command(['/nonexistent/path', '--analyze'])
-        
+        result = self.run_cli_command(["/nonexistent/path", "--analyze"])
+
         # Verify results
         assert result.returncode == 0  # Script handles error gracefully
         assert "not found" in result.stdout
-    
+
     def test_cli_missing_arguments(self, tmp_path):
         """Test CLI with missing required arguments."""
         # Run CLI command without input path
-        result = self.run_cli_command(['--analyze'])
-        
+        result = self.run_cli_command(["--analyze"])
+
         # Verify results
         assert result.returncode != 0
         assert "error" in result.stderr.lower()
-    
+
     def test_cli_no_command_specified(self, tmp_path):
         """Test CLI with no command flags."""
         # Create test data
         test_data = [
             {"url": "https://python.org", "title": "Python"},
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Run CLI command with no flags
         result = self.run_cli_command([test_file])
-        
+
         # Verify results
         assert result.returncode == 0
         assert "No command specified" in result.stdout
         assert "Use --help for available options" in result.stdout
-    
+
     def test_cli_multiple_commands(self, tmp_path):
         """Test CLI handles multiple commands (should use first one)."""
         # Create test data
         test_data = [
             {"url": "https://example.com", "title": "Example 1"},
-            {"url": "https://example.com", "title": "Example 2"}
+            {"url": "https://example.com", "title": "Example 2"},
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Run CLI command with multiple flags (duplicates should win)
-        result = self.run_cli_command([test_file, '--duplicates', '--analyze'])
-        
+        result = self.run_cli_command([test_file, "--duplicates", "--analyze"])
+
         # Verify results
         assert result.returncode == 0
         assert "Finding duplicates..." in result.stdout
         # Should NOT contain analyze output since duplicates comes first
         assert "Analyzing collection..." not in result.stdout
-    
+
     def test_cli_empty_file(self, tmp_path):
         """Test CLI with empty JSON file."""
         # Create empty JSON file
         test_file = self.create_test_bookmark_file(tmp_path, [])
-        
+
         # Run CLI command
-        result = self.run_cli_command([test_file, '--analyze'])
-        
+        result = self.run_cli_command([test_file, "--analyze"])
+
         # Verify results
         assert result.returncode == 0
-        assert "Total bookmarks: 0" in result.stdout or "No bookmarks to analyze" in result.stdout
-    
+        assert (
+            "Total bookmarks: 0" in result.stdout
+            or "No bookmarks to analyze" in result.stdout
+        )
+
     def test_cli_malformed_json(self, tmp_path):
         """Test CLI with malformed JSON file."""
         # Create malformed JSON file
         test_file = tmp_path / "malformed.json"
         test_file.write_text('{"invalid": json}')
-        
+
         # Run CLI command
-        result = self.run_cli_command([str(test_file), '--analyze'])
-        
+        result = self.run_cli_command([str(test_file), "--analyze"])
+
         # Verify results - should handle gracefully
         assert result.returncode == 0
         # Should either show error or handle gracefully
-        assert ("Error loading" in result.stderr or "No bookmarks" in result.stdout or 
-                "Failed to load bookmarks" in result.stdout)
-    
+        assert (
+            "Error loading" in result.stderr
+            or "No bookmarks" in result.stdout
+            or "Failed to load bookmarks" in result.stdout
+        )
+
     def test_cli_with_custom_models(self, tmp_path):
         """Test CLI with custom model parameters."""
         # Create test data
         test_data = [
             {"url": "https://python.org", "title": "Python"},
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Run CLI command with custom models
-        result = self.run_cli_command([
-            test_file, 
-            '--analyze', 
-            '--embedding-model', 'custom-embed',
-            '--results', '5'
-        ])
-        
+        result = self.run_cli_command(
+            [
+                test_file,
+                "--analyze",
+                "--embedding-model",
+                "custom-embed",
+                "--results",
+                "5",
+            ]
+        )
+
         # Verify results
         assert result.returncode == 0
         assert "Analyzing collection..." in result.stdout
         # Should work with custom parameters
-    
+
     def test_cli_results_parameter(self, tmp_path):
         """Test CLI with --results parameter."""
         # Create test data
         test_data = [
-            {"url": "https://python.org", "title": "Python", "description": "Python language", "tags": ["python"]},
+            {
+                "url": "https://python.org",
+                "title": "Python",
+                "description": "Python language",
+                "tags": ["python"],
+            },
         ]
-        
+
         test_file = self.create_test_bookmark_file(tmp_path, test_data)
-        
+
         # Mock to avoid Ollama dependency
-        with patch('bookmark_intelligence.VectorStore') as mock_vs:
+        with patch("bookmark_intelligence.VectorStore") as mock_vs:
             mock_vs_instance = Mock()
             mock_vs_instance.rebuild_from_bookmarks.return_value = True
             mock_vs_instance.search.return_value = SearchResult("test", [], 0)
             mock_vs.return_value = mock_vs_instance
-            
+
             # Run CLI command with custom results number
-            result = self.run_cli_command([test_file, '--search', 'python', '--results', '3'])
-            
+            result = self.run_cli_command(
+                [test_file, "--search", "python", "--results", "3"]
+            )
+
             # Verify results
             assert result.returncode == 0
             assert "Searching for: 'python'" in result.stdout
