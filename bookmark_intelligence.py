@@ -340,6 +340,7 @@ class BookmarkIntelligence:
             return
 
         print(f"Found {len(duplicates)} duplicate groups:")
+        removed: List[Bookmark] = []
         for i, group in enumerate(duplicates, 1):
             print(
                 f"\n{i}. {group.reason.replace('_', ' ').title()} (score: {group.similarity_score:.3f})"
@@ -348,6 +349,27 @@ class BookmarkIntelligence:
                 print(f"   {j}. {bookmark.title}")
                 print(f"      URL: {bookmark.url}")
                 print(f"      File: {bookmark.source_file}")
+
+            # Prompt user to optionally remove one of the duplicates
+            while True:
+                choice = input("Select bookmark to delete (0 to skip): ").strip()
+                if choice.isdigit():
+                    index = int(choice)
+                    if 0 <= index <= len(group.bookmarks):
+                        break
+                print("Please enter a valid number.")
+
+            if index > 0:
+                to_remove = group.bookmarks[index - 1]
+                if to_remove in self.bookmarks:
+                    self.bookmarks.remove(to_remove)
+                    removed.append(to_remove)
+                    print(f"Removed '{to_remove.title}'")
+
+        if removed:
+            print(f"\nRemoved {len(removed)} bookmarks.")
+        else:
+            print("\nNo bookmarks removed.")
 
     def _interactive_analyze(self):
         """Handle interactive analyze command."""
