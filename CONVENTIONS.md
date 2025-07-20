@@ -1,101 +1,54 @@
 # Project Conventions
 
-This file provides coding conventions and project context for AI coding assistants like Aider.
+This document describes the coding standards and workflow used in this repository. It is intended for both human contributors and AI coding assistants.
 
 ## Project Overview
-
-<!-- Brief description of your project -->
-This is a Python project that [describe your project purpose].
+The codebase implements a local bookmark enrichment and intelligence system. Python scripts interact with Ollama for local LLM models and use ChromaDB for embedding storage. Tests are written with `pytest` and tooling configuration lives in `pyproject.toml`.
 
 ## Development Environment
-
-- **Python Version**: 3.x (check pyproject.toml for exact version)
-- **Dependency Management**: Uses pyproject.toml with [pip/poetry/uv/etc]
-- **Virtual Environment**: Use `python -m venv venv` or your preferred tool
-- **Testing Framework**: [pytest/unittest/etc]
-- **Linting**: [ruff/flake8/black/etc]
+- **Python Version:** 3.8 or newer
+- **Dependency Management:** `pyproject.toml` with optional `.[dev]` extras
+- **Virtual Environment:** create with `python -m venv .venv`
+- **Testing Framework:** `pytest`
+- **Linting/Formatting:** `ruff`, `black`, and `mypy`
 
 ## Coding Standards
-
 ### Python Style
-- Follow PEP 8 for code style
-- Use type hints for all function parameters and return values
+- Follow PEP 8 with 4‑space indentation
+- Maximum line length is 88 characters
+- Use type hints for all functions and dataclasses when possible
 - Prefer f-strings for string formatting
-- Use meaningful variable and function names
-- Maximum line length: 88 characters (Black default)
+- Organize imports: standard library, third‑party, then local
 
 ### Code Organization
-- Keep functions focused and small (< 50 lines typically)
-- Use dataclasses or Pydantic models for structured data
-- Organize imports: standard library, third-party, local imports
-- Use absolute imports when possible
+- Core functionality lives in the `core/` package
+- CLI entry points are in the repository root (`bookmark_enricher.py`, etc.)
+- Tests reside in `tests/` mirroring the package structure
+- Use dataclasses for structured data
 
 ### Error Handling
-- Use specific exception types, not bare `except:`
-- Log errors with appropriate context
-- Validate inputs early in functions
-- Use context managers for resource management
+- Raise specific exception types; avoid bare `except:`
+- Log errors with context using the standard `logging` module
+- Validate inputs early and use context managers for file operations
 
 ### Documentation
-- Write docstrings for all public functions and classes
-- Use Google-style docstrings
-- Include type information in docstrings when helpful
-- Update README.md when adding new features
+- Provide docstrings for public functions and classes (Google style)
+- Update `README.md` and other docs when behavior changes
 
 ### Testing
-- Write tests for all new functionality
-- Use descriptive test names that explain what is being tested
-- Follow Arrange-Act-Assert pattern
-- Mock external dependencies in unit tests
+- Write tests for all new features or bug fixes
+- Use descriptive test names and the Arrange‑Act‑Assert pattern
+- Mock external services (e.g., network requests) in unit tests
 
-## Project-Specific Guidelines
+## Git Workflow
+- Create feature branches from `main`
+- Use conventional commit messages: `type(scope): description`
+- Keep commits small and focused
+- Run `pytest` and linters before committing
 
-### Dependencies
-- Only add dependencies that are truly necessary
-- Pin version ranges in pyproject.toml
-- Keep development dependencies separate from runtime dependencies
-- Document why each major dependency was chosen
+## Common Patterns
+- Use `pathlib.Path` for file paths
+- Prefer `json.loads()` over `eval()`
+- Use context managers for file and network operations
+- Avoid global variables and commented‑out code
 
-### Git Workflow
-- Write clear, descriptive commit messages
-- Use conventional commits format: `type(scope): description`
-- Keep commits atomic (one logical change per commit)
-- Include tests in the same commit as the feature they test
-
-### Performance Considerations
-- Profile before optimizing
-- Use appropriate data structures (dict vs list vs set)
-- Consider memory usage for large datasets
-- Cache expensive computations when appropriate
-
-## File Structure Preferences
-
-- Configuration files in project root
-- Source code in `src/` or package directory
-- Tests in `tests/` directory mirroring source structure
-- Documentation in `docs/` directory
-- Scripts and utilities in `scripts/` or `bin/`
-
-## When Making Changes
-
-1. **Before coding**: Understand the existing patterns in the codebase
-2. **During coding**: Follow the established conventions above
-3. **After coding**: Run tests, linting, and formatting tools
-4. **Before committing**: Review changes and update documentation if needed
-
-## Common Patterns to Follow
-
-- Use `pathlib.Path` instead of `os.path` for file operations
-- Prefer `json.loads()` over `eval()` for data parsing
-- Use context managers (`with` statements) for file operations
-- Validate configuration and inputs early
-- Use logging instead of print statements for debugging
-
-## Common Anti-Patterns to Avoid
-
-- Don't use global variables
-- Don't ignore error cases
-- Don't write overly complex one-liners
-- Don't commit commented-out code
-- Don't hardcode values that should be configurable
-- Don't mix business logic with presentation logic

@@ -315,3 +315,8 @@ This project uses `pyproject.toml` for dependency management. Key dependencies i
 ## License
 
 BSD-3-Clause License - see LICENSE file for details.
+
+## Developer & Agent Docs
+
+- [AGENTS.md](AGENTS.md)
+- [CONVENTIONS.md](CONVENTIONS.md)
