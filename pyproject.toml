@@ -22,6 +22,17 @@ dependencies = [
 [project.scripts]
 bookmark-enricher = "bookmark_enricher:main"
 bookmark-intelligence = "bookmark_intelligence:main"
+bookmark-importer = "bookmark_importer:main"
+
+[tool.setuptools]
+py-modules = [
+    "bookmark_enricher",
+    "bookmark_intelligence",
+    "bookmark_importer",
+]
+
+[tool.setuptools.packages.find]
+include = ["core"]
 
 [project.optional-dependencies]
 dev = [
