@@ -9,17 +9,10 @@ import os
 from collections import Counter, defaultdict
 from typing import Dict, List, Optional, Tuple
 
-try:
-    from .core.bookmark_loader import BookmarkLoader
-    from .core.models import Bookmark, DuplicateGroup, SearchResult
-    from .core.vector_store import VectorStore
-    from .core.web_extractor import WebExtractor
-except ImportError:
-    # Handle direct script execution
-    from core.bookmark_loader import BookmarkLoader
-    from core.models import Bookmark, DuplicateGroup, SearchResult
-    from core.vector_store import VectorStore
-    from core.web_extractor import WebExtractor
+from core.bookmark_loader import BookmarkLoader
+from core.models import Bookmark, DuplicateGroup, SearchResult
+from core.vector_store import VectorStore
+from core.web_extractor import WebExtractor
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)

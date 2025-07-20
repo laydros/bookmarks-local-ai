@@ -12,10 +12,11 @@ authors = [
     { name = "Jason Hamilton" }
 ]
 dependencies = [
-    "requests==2.31.0",
-    "beautifulsoup4==4.12.2",
-    "chromadb==0.3.29",
-    "ollama==0.1.7",
+    "requests==2.32.4",
+    "beautifulsoup4==4.13.4",
+    "chromadb==1.0.15",
+    "pydantic-settings==2.10.1",
+    "ollama==0.5.1",
     "lxml"
 ]
 
@@ -36,14 +37,14 @@ include = ["core"]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==7.4.3",
-    "pytest-cov==4.1.0",
-    "pytest-mock==3.12.0",
-    "pytest-asyncio==0.21.1",
-    "black==23.11.0",
-    "ruff==0.1.15",
-    "mypy==1.7.1",
-    "isort==5.12.0"
+    "pytest==8.4.1",
+    "pytest-cov==6.2.1",
+    "pytest-mock==3.14.1",
+    "pytest-asyncio==1.1.0",
+    "black==25.1.0",
+    "ruff==0.12.3",
+    "mypy==1.17.0",
+    "isort==6.0.1"
 ]
 
 [tool.pytest.ini_options]
