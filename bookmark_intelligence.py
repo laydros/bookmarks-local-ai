@@ -53,6 +53,7 @@ class BookmarkIntelligence:
 
         self.bookmarks: List[Bookmark] = []
         self.indexed = False
+        self.input_path: Optional[str] = None
 
         logger.info(f"Initialized BookmarkIntelligence with {embedding_model}")
 
@@ -75,6 +76,7 @@ class BookmarkIntelligence:
                 logger.error(f"Path not found: {path}")
                 return False
 
+            self.input_path = path
             logger.info(f"Loaded {len(self.bookmarks)} bookmarks")
             return True
 
@@ -368,6 +370,23 @@ class BookmarkIntelligence:
 
         if removed:
             print(f"\nRemoved {len(removed)} bookmarks.")
+            # Save changes back to files
+            if self.input_path:
+                print("Saving changes...")
+                if os.path.isfile(self.input_path):
+                    # Single file - save all bookmarks back to the same file
+                    if self.loader.save_to_file(self.bookmarks, self.input_path):
+                        print(f"Changes saved to {self.input_path}")
+                    else:
+                        print(f"Error saving changes to {self.input_path}")
+                elif os.path.isdir(self.input_path):
+                    # Directory - save bookmarks back to their original files
+                    if self.loader.save_by_source_file(self.bookmarks, self.input_path):
+                        print(f"Changes saved to files in {self.input_path}")
+                    else:
+                        print(f"Error saving changes to {self.input_path}")
+            else:
+                print("Warning: No input path stored, changes not saved to disk")
         else:
             print("\nNo bookmarks removed.")
 
