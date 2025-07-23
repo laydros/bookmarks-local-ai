@@ -545,8 +545,7 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default="new_categories",
-        help="Directory for new category files",
+        help="Directory for new category files (defaults to input directory)",
     )
     parser.add_argument(
         "--output-md", help="Write category suggestions to a markdown file"
@@ -685,8 +684,16 @@ def main():
                     .lower()
                 )
                 if choice == "y":
-                    suggester.create_placeholder_files(suggestions, args.output_dir)
-                    print(f"Created files in {args.output_dir}")
+                    # Default output directory to input directory if not specified
+                    output_dir = args.output_dir
+                    if not output_dir:
+                        if os.path.isdir(args.input):
+                            output_dir = args.input
+                        else:
+                            output_dir = os.path.dirname(args.input)
+                    
+                    suggester.create_placeholder_files(suggestions, output_dir)
+                    print(f"Created files in {output_dir}")
 
         elif args.interactive:
             intelligence.interactive_mode()
