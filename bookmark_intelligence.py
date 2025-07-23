@@ -15,6 +15,7 @@ from core.vector_store import VectorStore
 from core.web_extractor import WebExtractor
 from core.spinner import Spinner
 from core.category_suggester import CategorySuggester
+from core.category_manager import CategoryManager
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -53,6 +54,7 @@ class BookmarkIntelligence:
             ollama_url=ollama_url,
             embedding_model=embedding_model,
         )
+        self.category_manager = CategoryManager(self.vector_store, self.loader)
 
         self.bookmarks: List[Bookmark] = []
         self.indexed = False
@@ -292,8 +294,6 @@ class BookmarkIntelligence:
         Returns:
             True if successful, False otherwise
         """
-        import json
-        
         # Use input path as default output directory
         if not output_dir:
             if self.input_path:
@@ -304,24 +304,7 @@ class BookmarkIntelligence:
             else:
                 output_dir = "."
         
-        # Ensure .json extension
-        if not category_name.endswith('.json'):
-            category_name = f"{category_name}.json"
-        
-        file_path = os.path.join(output_dir, category_name)
-        
-        if os.path.exists(file_path):
-            logger.warning(f"Category file already exists: {file_path}")
-            return False
-        
-        try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                json.dump([], f, indent=2, ensure_ascii=False)
-            logger.info(f"Created empty category file: {file_path}")
-            return True
-        except Exception as e:
-            logger.error(f"Error creating category file: {e}")
-            return False
+        return self.category_manager.create_category(category_name, output_dir)
 
     def suggest_categorization(
         self, new_bookmark: Bookmark, n_suggestions: int = 3
@@ -606,6 +589,15 @@ def main():
     parser.add_argument(
         "--create-category", help="Create a new empty category file with the given name"
     )
+    parser.add_argument(
+        "--populate-category", help="Find and suggest bookmarks for a specific category"
+    )
+    parser.add_argument(
+        "--limit", type=int, default=5, help="Maximum number of suggestions per run (default: 5)"
+    )
+    parser.add_argument(
+        "--threshold", type=float, default=0.85, help="Minimum confidence threshold (default: 0.85)"
+    )
 
     args = parser.parse_args()
 
@@ -756,6 +748,29 @@ def main():
                 print(f"✓ Created category: {args.create_category}")
             else:
                 print(f"✗ Failed to create category: {args.create_category}")
+
+        elif args.populate_category:
+            # Determine base directory
+            if os.path.isdir(args.input):
+                base_dir = args.input
+            else:
+                base_dir = os.path.dirname(args.input)
+            
+            moved = intelligence.category_manager.populate_category_interactive(
+                args.populate_category,
+                intelligence.bookmarks,
+                base_dir,
+                limit=args.limit,
+                threshold=args.threshold
+            )
+            
+            if moved:
+                print(f"\n✓ Successfully populated {args.populate_category} category")
+                # Re-index after moving bookmarks
+                intelligence.indexed = False
+                intelligence._ensure_indexed()
+            else:
+                print(f"\n✗ No bookmarks were moved to {args.populate_category}")
 
         elif args.interactive:
             intelligence.interactive_mode()
