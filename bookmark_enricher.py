@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""
-Bookmark Enricher using RAG with Ollama and ChromaDB - Refactored Version
-"""
+"""Bookmark Enricher using RAG with Ollama and ChromaDB - Refactored Version."""
+
+from core.env_setup import configure_chromadb_env
+
+configure_chromadb_env()
 
 import json
 import logging
-import os
 import time
 from typing import List, Optional
 
@@ -19,19 +20,11 @@ from core.vector_store import VectorStore
 from core.web_extractor import WebExtractor
 from core.spinner import Spinner
 
-# Disable ChromaDB telemetry
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
-os.environ["CHROMA_SERVER_NOFILE"] = "1"
-
 # Set up logging - reduce HTTP request noise
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("ollama").setLevel(logging.WARNING)
-
-# Disable ChromaDB telemetry noise
-logging.getLogger("chromadb.telemetry.posthog").setLevel(logging.CRITICAL)
-logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 
 
 class ProcessingSummary:
