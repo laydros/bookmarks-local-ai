@@ -17,6 +17,7 @@ from core.bookmark_loader import BookmarkLoader
 from core.models import Bookmark
 from core.vector_store import VectorStore
 from core.web_extractor import WebExtractor
+from core.spinner import Spinner
 
 # Disable ChromaDB telemetry
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -339,32 +340,33 @@ Please provide:
 Respond ONLY with valid JSON in this exact format:
 {{"description": "your description here", "tags": ["tag1", "tag2", "tag3"]}}"""
 
-        try:
-            response = ollama.generate(
-                model=self.llm_model, prompt=prompt, options={"temperature": 0.3}
-            )
+        with Spinner(f"Generating enrichment for {bookmark.title}..."):
+            try:
+                response = ollama.generate(
+                    model=self.llm_model, prompt=prompt, options={"temperature": 0.3}
+                )
 
-            response_text = response["response"].strip()
+                response_text = response["response"].strip()
 
-            # Extract JSON from response
-            json_start = response_text.find("{")
-            json_end = response_text.rfind("}") + 1
+                # Extract JSON from response
+                json_start = response_text.find("{")
+                json_end = response_text.rfind("}") + 1
 
-            if json_start != -1 and json_end > json_start:
-                json_text = response_text[json_start:json_end]
-                return json.loads(json_text)
-            else:
-                logger.warning(
-                    f"Could not parse JSON from response for {bookmark.title}"
+                if json_start != -1 and json_end > json_start:
+                    json_text = response_text[json_start:json_end]
+                    return json.loads(json_text)
+                else:
+                    logger.warning(
+                        f"Could not parse JSON from response for {bookmark.title}"
+                    )
+                    return None
+
+            except Exception as e:
+                logger.error(f"Error generating enrichment for {bookmark.title}: {e}")
+                self.summary.add_enrichment_failure(
+                    bookmark.title, bookmark.url, f"LLM generation failed: {str(e)}"
                 )
                 return None
-
-        except Exception as e:
-            logger.error(f"Error generating enrichment for {bookmark.title}: {e}")
-            self.summary.add_enrichment_failure(
-                bookmark.title, bookmark.url, f"LLM generation failed: {str(e)}"
-            )
-            return None
 
     def process_single_file(
         self, input_file: str, output_file: Optional[str] = None
@@ -443,16 +445,15 @@ Respond ONLY with valid JSON in this exact format:
         """
         # Build vector store from enriched bookmarks
         enriched_bookmarks = self.loader.filter_enriched(bookmarks)
-        logger.info(
-            f"Building vector store from {len(enriched_bookmarks)} enriched bookmarks..."
-        )
-
         if enriched_bookmarks:
-            try:
-                self.vector_store.rebuild_from_bookmarks(enriched_bookmarks)
-            except Exception as e:
-                self.summary.add_error(f"Failed to build vector store: {str(e)}")
-                return
+            with Spinner(
+                f"Building vector store from {len(enriched_bookmarks)} bookmarks..."
+            ):
+                try:
+                    self.vector_store.rebuild_from_bookmarks(enriched_bookmarks)
+                except Exception as e:
+                    self.summary.add_error(f"Failed to build vector store: {str(e)}")
+                    return
 
         # Process unenriched bookmarks
         unenriched_bookmarks = self.loader.filter_unenriched(bookmarks)

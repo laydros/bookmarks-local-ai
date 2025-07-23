@@ -13,10 +13,12 @@ from core.bookmark_loader import BookmarkLoader
 from core.models import Bookmark, DuplicateGroup, SearchResult
 from core.vector_store import VectorStore
 from core.web_extractor import WebExtractor
+from core.spinner import Spinner
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 # Disable ChromaDB telemetry noise
 os.environ["ANONYMIZED_TELEMETRY"] = "False"
@@ -87,11 +89,11 @@ class BookmarkIntelligence:
     def _ensure_indexed(self) -> bool:
         """Ensure bookmarks are indexed in vector store."""
         if not self.indexed and self.bookmarks:
-            logger.info("Indexing bookmarks for search...")
-            if not self.vector_store.rebuild_from_bookmarks(self.bookmarks):
-                logger.error("Failed to index bookmarks")
-                return False
-            self.indexed = True
+            with Spinner("Indexing bookmarks..."):
+                if not self.vector_store.rebuild_from_bookmarks(self.bookmarks):
+                    logger.error("Failed to index bookmarks")
+                    return False
+                self.indexed = True
         return True
 
     def search(self, query: str, n_results: int = 10) -> SearchResult:
@@ -109,7 +111,8 @@ class BookmarkIntelligence:
             return SearchResult(query=query, similar_bookmarks=[], total_results=0)
 
         try:
-            return self.vector_store.search(query, n_results)
+            with Spinner(f"Searching for '{query}'..."):
+                return self.vector_store.search(query, n_results)
         except Exception as e:
             logger.error(f"Search failed: {e}")
             return SearchResult(query=query, similar_bookmarks=[], total_results=0)
@@ -126,52 +129,57 @@ class BookmarkIntelligence:
         Returns:
             List of DuplicateGroup objects
         """
-        duplicates = []
+        with Spinner("Finding duplicates..."):
+            duplicates = []
 
-        # Group by exact URL
-        url_groups = defaultdict(list)
-        for bookmark in self.bookmarks:
-            if bookmark.url:
-                url_groups[bookmark.url].append(bookmark)
+            # Group by exact URL
+            url_groups = defaultdict(list)
+            for bookmark in self.bookmarks:
+                if bookmark.url:
+                    url_groups[bookmark.url].append(bookmark)
 
-        # Add URL duplicates
-        for url, bookmarks in url_groups.items():
-            if len(bookmarks) > 1:
-                duplicates.append(
-                    DuplicateGroup(
-                        bookmarks=bookmarks, similarity_score=1.0, reason="exact_url"
-                    )
-                )
-
-        # Group by similar titles
-        title_groups = defaultdict(list)
-        for bookmark in self.bookmarks:
-            if bookmark.title:
-                # Simple normalization
-                normalized_title = bookmark.title.lower().strip()
-                title_groups[normalized_title].append(bookmark)
-
-        # Add title duplicates (excluding those already found by URL)
-        processed_urls = set()
-        for url_group in duplicates:
-            for bookmark in url_group.bookmarks:
-                processed_urls.add(bookmark.url)
-
-        for title, bookmarks in title_groups.items():
-            if len(bookmarks) > 1:
-                # Filter out already processed URLs
-                unique_bookmarks = [b for b in bookmarks if b.url not in processed_urls]
-                if len(unique_bookmarks) > 1:
+            # Add URL duplicates
+            for url, bookmarks in url_groups.items():
+                if len(bookmarks) > 1:
                     duplicates.append(
                         DuplicateGroup(
-                            bookmarks=unique_bookmarks,
-                            similarity_score=0.9,
-                            reason="similar_title",
+                            bookmarks=bookmarks,
+                            similarity_score=1.0,
+                            reason="exact_url",
                         )
                     )
 
-        # TODO: Add content similarity detection using vector search
-        # This would require comparing embeddings of all bookmarks
+            # Group by similar titles
+            title_groups = defaultdict(list)
+            for bookmark in self.bookmarks:
+                if bookmark.title:
+                    # Simple normalization
+                    normalized_title = bookmark.title.lower().strip()
+                    title_groups[normalized_title].append(bookmark)
+
+            # Add title duplicates (excluding those already found by URL)
+            processed_urls = set()
+            for url_group in duplicates:
+                for bookmark in url_group.bookmarks:
+                    processed_urls.add(bookmark.url)
+
+            for title, bookmarks in title_groups.items():
+                if len(bookmarks) > 1:
+                    # Filter out already processed URLs
+                    unique_bookmarks = [
+                        b for b in bookmarks if b.url not in processed_urls
+                    ]
+                    if len(unique_bookmarks) > 1:
+                        duplicates.append(
+                            DuplicateGroup(
+                                bookmarks=unique_bookmarks,
+                                similarity_score=0.9,
+                                reason="similar_title",
+                            )
+                        )
+
+            # TODO: Add content similarity detection using vector search
+            # This would require comparing embeddings of all bookmarks
 
         return duplicates
 
@@ -185,29 +193,30 @@ class BookmarkIntelligence:
         if not self.bookmarks:
             return {}
 
-        # Basic statistics
-        total = len(self.bookmarks)
-        enriched = len([b for b in self.bookmarks if b.is_enriched])
+        with Spinner("Analyzing collection..."):
+            # Basic statistics
+            total = len(self.bookmarks)
+            enriched = len([b for b in self.bookmarks if b.is_enriched])
 
-        # Domain analysis
-        domain_counts = Counter()
-        for bookmark in self.bookmarks:
-            domain = bookmark.domain
-            if domain:
-                domain_counts[domain] += 1
+            # Domain analysis
+            domain_counts = Counter()
+            for bookmark in self.bookmarks:
+                domain = bookmark.domain
+                if domain:
+                    domain_counts[domain] += 1
 
-        # Tag analysis
-        tag_counts = Counter()
-        for bookmark in self.bookmarks:
-            if bookmark.tags:
-                for tag in bookmark.tags:
-                    tag_counts[tag.lower()] += 1
+            # Tag analysis
+            tag_counts = Counter()
+            for bookmark in self.bookmarks:
+                if bookmark.tags:
+                    for tag in bookmark.tags:
+                        tag_counts[tag.lower()] += 1
 
-        # File distribution
-        file_counts = Counter()
-        for bookmark in self.bookmarks:
-            if bookmark.source_file:
-                file_counts[bookmark.source_file] += 1
+            # File distribution
+            file_counts = Counter()
+            for bookmark in self.bookmarks:
+                if bookmark.source_file:
+                    file_counts[bookmark.source_file] += 1
 
         return {
             "total_bookmarks": total,
@@ -237,27 +246,32 @@ class BookmarkIntelligence:
         if not self._ensure_indexed():
             return []
 
-        # Search for similar bookmarks
-        query = f"{new_bookmark.title} {new_bookmark.content_text}"
-        search_result = self.search(query, n_results=10)
+        with Spinner("Finding suggestions..."):
+            # Search for similar bookmarks
+            query = f"{new_bookmark.title} {new_bookmark.content_text}"
+            search_result = self.vector_store.search(query, n_results=10)
 
-        if not search_result.similar_bookmarks:
-            return []
+            if not search_result.similar_bookmarks:
+                return []
 
-        # Count file occurrences weighted by similarity
-        file_scores = defaultdict(float)
-        for similar in search_result.similar_bookmarks:
-            if similar.bookmark.source_file:
-                file_scores[similar.bookmark.source_file] += similar.similarity_score
+            # Count file occurrences weighted by similarity
+            file_scores = defaultdict(float)
+            for similar in search_result.similar_bookmarks:
+                if similar.bookmark.source_file:
+                    file_scores[
+                        similar.bookmark.source_file
+                    ] += similar.similarity_score
 
-        # Normalize scores
-        max_score = max(file_scores.values()) if file_scores else 1.0
-        normalized_scores = [(f, score / max_score) for f, score in file_scores.items()]
+            # Normalize scores
+            max_score = max(file_scores.values()) if file_scores else 1.0
+            normalized_scores = [
+                (f, score / max_score) for f, score in file_scores.items()
+            ]
 
-        # Return top suggestions
-        return sorted(normalized_scores, key=lambda x: x[1], reverse=True)[
-            :n_suggestions
-        ]
+            # Return top suggestions
+            return sorted(normalized_scores, key=lambda x: x[1], reverse=True)[
+                :n_suggestions
+            ]
 
     def interactive_mode(self):
         """Run interactive query interface."""
@@ -314,7 +328,6 @@ class BookmarkIntelligence:
 
     def _interactive_search(self, query: str):
         """Handle interactive search command."""
-        print(f"\n🔍 Searching for: '{query}'")
         result = self.search(query)
 
         if not result.similar_bookmarks:
@@ -334,7 +347,6 @@ class BookmarkIntelligence:
 
     def _interactive_duplicates(self):
         """Handle interactive duplicates command."""
-        print("\n🔍 Finding duplicates...")
         duplicates = self.find_duplicates()
 
         if not duplicates:
@@ -417,20 +429,18 @@ class BookmarkIntelligence:
 
     def _interactive_categorize(self, url: str):
         """Handle interactive categorize command."""
-        print(f"\n📁 Suggesting category for: {url}")
-
         # Create a temporary bookmark for categorization
         temp_bookmark = Bookmark(url=url, title="", description="")
 
         # Try to extract content
-        try:
-
-            web_extractor = WebExtractor()
-            title, description = web_extractor.extract_content(url)
-            temp_bookmark.title = title
-            temp_bookmark.description = description
-        except Exception as e:
-            logger.warning(f"Could not extract content from {url}: {e}")
+        with Spinner(f"Extracting content from {url}..."):
+            try:
+                web_extractor = WebExtractor()
+                title, description = web_extractor.extract_content(url)
+                temp_bookmark.title = title
+                temp_bookmark.description = description
+            except Exception as e:
+                logger.warning(f"Could not extract content from {url}: {e}")
 
         suggestions = self.suggest_categorization(temp_bookmark)
 
@@ -438,7 +448,7 @@ class BookmarkIntelligence:
             print("No suggestions available.")
             return
 
-        print("Suggested categories:")
+        print("\nSuggested categories:")
         for i, (filename, confidence) in enumerate(suggestions, 1):
             print(f"  {i}. {filename} (confidence: {confidence:.3f})")
 
@@ -497,7 +507,6 @@ def main():
     # Execute commands
     try:
         if args.search:
-            print(f"🔍 Searching for: '{args.search}'")
             result = intelligence.search(args.search, args.results)
 
             if result.similar_bookmarks:
@@ -552,20 +561,18 @@ def main():
                 print("No bookmarks to analyze.")
 
         elif args.categorize:
-            print(f"📁 Suggesting category for: {args.categorize}")
-
             # Create temporary bookmark
             temp_bookmark = Bookmark(url=args.categorize, title="", description="")
 
             # Try to extract content
-            try:
-
-                web_extractor = WebExtractor()
-                title, description = web_extractor.extract_content(args.categorize)
-                temp_bookmark.title = title
-                temp_bookmark.description = description
-            except Exception as e:
-                logger.warning(f"Could not extract content: {e}")
+            with Spinner(f"Extracting content from {args.categorize}..."):
+                try:
+                    web_extractor = WebExtractor()
+                    title, description = web_extractor.extract_content(args.categorize)
+                    temp_bookmark.title = title
+                    temp_bookmark.description = description
+                except Exception as e:
+                    logger.warning(f"Could not extract content: {e}")
 
             suggestions = intelligence.suggest_categorization(temp_bookmark)
 

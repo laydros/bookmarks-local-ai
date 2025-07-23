@@ -95,9 +95,9 @@ class VectorStore:
                     "title": bookmark.title,
                     "domain": bookmark.domain,
                     "source_file": bookmark.source_file,
-                    "tags": ",".join(bookmark.tags)
-                    if bookmark.tags
-                    else "",  # Convert list to string
+                    "tags": (
+                        ",".join(bookmark.tags) if bookmark.tags else ""
+                    ),  # Convert list to string
                 }
             )
 
@@ -155,9 +155,11 @@ class VectorStore:
                     zip(
                         results["documents"][0],
                         results["metadatas"][0],
-                        results["distances"][0]
-                        if results.get("distances")
-                        else [0] * len(results["documents"][0]),
+                        (
+                            results["distances"][0]
+                            if results.get("distances")
+                            else [0] * len(results["documents"][0])
+                        ),
                     )
                 ):
                     # Convert metadata back to Bookmark

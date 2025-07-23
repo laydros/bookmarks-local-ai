@@ -485,7 +485,6 @@ class TestInteractiveMode:
             intelligence._interactive_search("python")
             output = captured_output.getvalue()
 
-            assert "Searching for: 'python'" in output
             assert "Found 1 results:" in output
             assert "Python.org" in output
             assert "Score: 0.950" in output
@@ -603,7 +602,7 @@ class TestInteractiveMode:
             intelligence._interactive_categorize("https://test.com")
             output = captured_output.getvalue()
 
-            assert "Suggesting category for: https://test.com" in output
+            assert "Extracting content from https://test.com" in output
             assert "Suggested categories:" in output
             assert "test.json" in output
             assert "confidence: 0.900" in output
@@ -866,7 +865,7 @@ class TestCLICommands:
 
         # Verify results
         assert result.returncode == 0
-        assert "Searching for: 'python'" in result.stdout
+        assert "Searching for 'python'..." in result.stdout
         assert "No results found." in result.stdout or "Found" in result.stdout
 
     def test_cli_categorize_command(self, tmp_path):
@@ -907,7 +906,7 @@ class TestCLICommands:
 
             # Verify results
             assert result.returncode == 0
-            assert "Suggesting category for: https://example.com" in result.stdout
+            assert "Extracting content from https://example.com" in result.stdout
             assert (
                 "No suggestions available." in result.stdout
                 or "Suggested categories:" in result.stdout
@@ -1068,4 +1067,4 @@ class TestCLICommands:
 
             # Verify results
             assert result.returncode == 0
-            assert "Searching for: 'python'" in result.stdout
+            assert "Searching for 'python'..." in result.stdout

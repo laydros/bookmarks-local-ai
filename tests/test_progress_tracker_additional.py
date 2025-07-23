@@ -23,7 +23,10 @@ def test_finish_prints_summary():
         with patch.object(builtins, "print") as mock_print:
             tracker.finish()
             # The final print call should include description and successful count
-            assert any("Proc complete" in str(call.args[0]) for call in mock_print.call_args_list)
+            assert any(
+                "Proc complete" in str(call.args[0])
+                for call in mock_print.call_args_list
+            )
 
 
 def test_set_description():

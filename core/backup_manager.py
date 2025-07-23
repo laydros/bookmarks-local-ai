@@ -228,12 +228,16 @@ class BackupManager:
                 "total_size_bytes": total_size,
                 "total_size_mb": total_size / (1024 * 1024),
                 "backup_dir": self.backup_dir,
-                "oldest_backup": min(backups, key=lambda x: x["created"])["created"]
-                if backups
-                else None,
-                "newest_backup": max(backups, key=lambda x: x["created"])["created"]
-                if backups
-                else None,
+                "oldest_backup": (
+                    min(backups, key=lambda x: x["created"])["created"]
+                    if backups
+                    else None
+                ),
+                "newest_backup": (
+                    max(backups, key=lambda x: x["created"])["created"]
+                    if backups
+                    else None
+                ),
             }
         except Exception as e:
             logger.error(f"Error getting backup stats: {e}")
