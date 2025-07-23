@@ -196,6 +196,28 @@ class TestCategoryManagerFindCandidates:
         # Should respect limit of 2
         assert len(candidates) == 2
 
+    def test_find_candidates_fallback_low_scores(
+        self, category_manager, mock_vector_store, sample_bookmarks
+    ):
+        """Ensure low-score results are still returned if none meet the threshold."""
+        mock_similar = [
+            SimilarBookmark(bookmark=sample_bookmarks[0], similarity_score=0.55, content="c1"),
+            SimilarBookmark(bookmark=sample_bookmarks[1], similarity_score=0.50, content="c2"),
+        ]
+        mock_vector_store.search.return_value = SearchResult(
+            query="emacs",
+            similar_bookmarks=mock_similar,
+            total_results=2,
+        )
+
+        candidates = category_manager.find_category_candidates(
+            "emacs", sample_bookmarks, limit=5, threshold=0.85
+        )
+
+        assert len(candidates) == 2
+        assert candidates[0][0] == sample_bookmarks[0]
+        assert candidates[0][1] == 0.55
+
 
 class TestCategoryManagerMoveBookmarks:
     """Test moving bookmarks between categories."""
