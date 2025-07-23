@@ -17,7 +17,9 @@ dependencies = [
     "chromadb==1.0.15",
     "pydantic-settings==2.10.1",
     "ollama==0.5.1",
-    "lxml"
+    "lxml",
+    "hdbscan==0.8.33",
+    "scikit-learn==1.4.2"
 ]
 
 [project.scripts]
