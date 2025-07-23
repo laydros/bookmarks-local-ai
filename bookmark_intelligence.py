@@ -14,6 +14,7 @@ from core.models import Bookmark, DuplicateGroup, SearchResult
 from core.vector_store import VectorStore
 from core.web_extractor import WebExtractor
 from core.spinner import Spinner
+from core.category_suggester import CategorySuggester
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -484,6 +485,22 @@ def main():
         default=10,
         help="Number of search results to return (default: 10)",
     )
+    parser.add_argument(
+        "--suggest-categories",
+        action="store_true",
+        help="Propose new categories based on bookmark content",
+    )
+    parser.add_argument(
+        "--use-kmeans", type=int, help="Use k-means with the given k value"
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="new_categories",
+        help="Directory for new category files",
+    )
+    parser.add_argument(
+        "--output-md", help="Write category suggestions to a markdown file"
+    )
 
     args = parser.parse_args()
 
@@ -582,6 +599,43 @@ def main():
                     print(f"  {i}. {filename} (confidence: {confidence:.3f})")
             else:
                 print("No suggestions available.")
+
+        elif args.suggest_categories:
+            suggester = CategorySuggester(intelligence.vector_store)
+            suggestions = suggester.suggest(intelligence.bookmarks, args.use_kmeans)
+
+            if not suggestions:
+                print("No category suggestions available.")
+            else:
+                if args.output_md:
+                    with open(args.output_md, "w", encoding="utf-8") as f:
+                        f.write("# Suggested Categories\n\n")
+                        for s in suggestions:
+                            f.write(f"## {s.name}\n\n{s.description}\n\n")
+                            for b in s.bookmarks:
+                                f.write(f"- [{b.title}]({b.url})\n")
+                            if s.source_files:
+                                f.write(
+                                    "\nFiles: " + ", ".join(s.source_files) + "\n\n"
+                                )
+                    print(f"Suggestions written to {args.output_md}")
+                else:
+                    print("\nProposed categories:")
+                    for s in suggestions:
+                        print(f"\n### {s.name}\n{s.description}")
+                        for b in s.bookmarks:
+                            print(f"- {b.title} ({b.url})")
+                        if s.source_files:
+                            print("Files: " + ", ".join(s.source_files))
+
+                choice = (
+                    input("Generate empty .json files for these new categories? [y/N] ")
+                    .strip()
+                    .lower()
+                )
+                if choice == "y":
+                    suggester.create_placeholder_files(suggestions, args.output_dir)
+                    print(f"Created files in {args.output_dir}")
 
         elif args.interactive:
             intelligence.interactive_mode()
