@@ -184,6 +184,56 @@ class BookmarkIntelligence:
 
         return duplicates
 
+    def is_duplicate(self, new_bookmark: Bookmark, similarity_threshold: float = 0.85) -> Optional[Bookmark]:
+        """
+        Check if a single bookmark is a duplicate of existing bookmarks.
+        
+        Args:
+            new_bookmark: Bookmark to check for duplicates
+            similarity_threshold: Minimum similarity score to consider duplicates
+            
+        Returns:
+            Existing bookmark if duplicate found, None otherwise
+        """
+        # Check exact URL match first (fastest)
+        for bookmark in self.bookmarks:
+            if bookmark.url and new_bookmark.url and bookmark.url == new_bookmark.url:
+                return bookmark
+                
+        # Check similar title (fast)
+        if new_bookmark.title:
+            normalized_new_title = new_bookmark.title.lower().strip()
+            for bookmark in self.bookmarks:
+                if bookmark.title:
+                    normalized_title = bookmark.title.lower().strip()
+                    if normalized_new_title == normalized_title:
+                        return bookmark
+        
+        # Check content similarity using vector search (slower but more thorough)
+        if self._ensure_indexed() and new_bookmark.description:
+            try:
+                search_content = f"{new_bookmark.title} {new_bookmark.description}".strip()
+                if search_content:
+                    results = self.vector_store.search(search_content, n_results=3)
+                    
+                    for result in results:
+                        if result.get('distances') and len(result['distances'][0]) > 0:
+                            # ChromaDB uses distance (lower is more similar)
+                            # Convert to similarity score
+                            distance = result['distances'][0][0]
+                            similarity = 1.0 - distance
+                            
+                            if similarity >= similarity_threshold:
+                                # Find the matching bookmark
+                                result_id = result['ids'][0][0]
+                                for bookmark in self.bookmarks:
+                                    if bookmark.url == result_id or str(hash(bookmark.url)) == result_id:
+                                        return bookmark
+            except Exception as e:
+                logger.warning(f"Vector similarity check failed: {e}")
+        
+        return None
+
     def analyze_collection(self) -> Dict:
         """
         Analyze the bookmark collection for insights.

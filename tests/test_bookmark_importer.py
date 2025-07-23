@@ -51,10 +51,14 @@ def test_importer_adds_bookmark(tmp_path, sample_bookmarks):
         ), patch(
             "bookmark_importer.BookmarkIntelligence.suggest_categorization",
             return_value=[("file1.json", 1.0)],
+        ), patch(
+            "bookmark_importer.BookmarkIntelligence.is_duplicate",
+            return_value=None,
         ):
-            dead = importer.import_from_file(str(new_file))
+            dead, duplicates = importer.import_from_file(str(new_file))
 
     assert dead == []
+    assert duplicates == []
 
     bookmarks = BookmarkLoader.load_from_file(str(target_file))
     assert any(b.url == "https://new.com" for b in bookmarks)
@@ -71,9 +75,10 @@ def test_importer_reports_dead_links(tmp_path):
     importer = BookmarkImporter(str(existing_dir))
     with patch.object(BookmarkImporter, "print_summary"):
         with patch("bookmark_importer.WebExtractor.is_valid_url", return_value=False):
-            dead = importer.import_from_file(str(new_file))
+            dead, duplicates = importer.import_from_file(str(new_file))
 
     assert dead == ["https://dead.com"]
+    assert duplicates == []
     bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
     assert len(bookmarks) == 0
 
@@ -93,10 +98,14 @@ def test_importer_parses_html(mock_summary, tmp_path):
     ), patch(
         "bookmark_importer.BookmarkIntelligence.suggest_categorization",
         return_value=[("uncategorized.json", 1.0)],
+    ), patch(
+        "bookmark_importer.BookmarkIntelligence.is_duplicate",
+        return_value=None,
     ):
-        dead = importer.import_from_file(str(new_file))
+        dead, duplicates = importer.import_from_file(str(new_file))
 
     assert dead == []
+    assert duplicates == []
     bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
     assert any(b.url == "https://html.com" for b in bookmarks)
 
@@ -116,10 +125,14 @@ def test_importer_parses_markdown(mock_summary, tmp_path):
     ), patch(
         "bookmark_importer.BookmarkIntelligence.suggest_categorization",
         return_value=[("uncategorized.json", 1.0)],
+    ), patch(
+        "bookmark_importer.BookmarkIntelligence.is_duplicate",
+        return_value=None,
     ):
-        dead = importer.import_from_file(str(new_file))
+        dead, duplicates = importer.import_from_file(str(new_file))
 
     assert dead == []
+    assert duplicates == []
     bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
     assert any(b.url == "https://md.com" for b in bookmarks)
 
@@ -137,11 +150,12 @@ def test_importer_parses_plain_list(mock_summary, tmp_path):
         "bookmark_importer.WebExtractor.extract_content",
         return_value=("Title", "Desc"),
     ), patch(
-        "bookmark_importer.BookmarkIntelligence.suggest_categorization",
-        return_value=[("uncategorized.json", 1.0)],
+        "bookmark_importer.BookmarkIntelligence.is_duplicate",
+        return_value=None,
     ):
-        dead = importer.import_from_file(str(new_file))
+        dead, duplicates = importer.import_from_file(str(new_file))
 
     assert dead == []
+    assert duplicates == []
     bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
     assert any(b.url == "https://plain.com" for b in bookmarks)

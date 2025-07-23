@@ -14,11 +14,11 @@ This is a local RAG-powered bookmark intelligence system built with Python. It u
 python3 -m venv venv
 source venv/bin/activate  # On macOS/Linux
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies (production + dev)
+pip install -e .[dev]
 
-# Install dev dependencies (for testing)
-pip install -r requirements-dev.txt
+# Or install just production dependencies
+pip install -e .
 ```
 
 ### Testing
@@ -26,11 +26,11 @@ pip install -r requirements-dev.txt
 # Run all tests
 pytest
 
-# Run with coverage
-pytest --cov=util/shared --cov-report=html
+# Run with coverage (configured in pyproject.toml)
+pytest --cov=core --cov-report=html
 
 # Run specific test file
-pytest util/tests/test_models.py
+pytest tests/test_models.py
 
 # Run only fast tests (exclude slow integration tests)
 pytest -m "not slow"
@@ -39,13 +39,13 @@ pytest -m "not slow"
 ### Code Quality
 ```bash
 # Format code
-black util/
+black .
 
-# Check style
-flake8 util/
+# Check style (using ruff)
+ruff check .
 
 # Type checking
-mypy util/
+mypy core/
 ```
 
 ### Ollama Setup (Required for Enrichment)
@@ -61,21 +61,39 @@ ollama pull llama3.1:8b
 ollama list
 ```
 
-### Bookmark Enrichment
+### Bookmark Tools
 ```bash
 # Enrich single file
-python util/bookmark_enricher.py bookmarks.json
+python bookmark_enricher.py bookmarks.json
+# Or use installed script
+bookmark-enricher bookmarks.json
 
 # Enrich all JSON files in directory
-python util/bookmark_enricher.py json/ --directory
+python bookmark_enricher.py json/ --directory
 
 # Use custom models
-python util/bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm-model mistral:7b
+python bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm-model mistral:7b
+
+# Search and analyze bookmarks
+python bookmark_intelligence.py search "machine learning"
+# Or use installed script
+bookmark-intelligence search "machine learning"
+
+# Find duplicate bookmarks
+python bookmark_intelligence.py duplicates bookmarks.json
+
+# Suggest categories for bookmark organization
+python bookmark_intelligence.py suggest-categories bookmarks.json
+
+# Import bookmarks from browser exports
+python bookmark_importer.py exported_bookmarks.html
+# Or use installed script
+bookmark-importer exported_bookmarks.html
 ```
 
 ## Architecture
 
-### Core Components (`util/shared/`)
+### Core Components (`core/`)
 
 - **models.py**: Data models and validation
   - `Bookmark`: Main bookmark data structure with flexible JSON field support
@@ -97,6 +115,27 @@ python util/bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm
   - Handles various HTML parsing scenarios
   - Includes timeout and error handling
 
+- **config_manager.py**: Configuration management
+  - `ModelConfig`, `ProcessingConfig`: Configuration dataclasses
+  - Handles YAML/JSON config files and environment variables
+  - Provides fallback model configurations
+
+- **category_suggester.py**: AI-powered category suggestions
+  - `CategorySuggester`: Analyzes bookmarks and suggests organizational categories
+  - Uses HDBSCAN or K-means clustering for grouping similar bookmarks
+  - Generates category names and descriptions using LLM
+
+- **backup_manager.py**: Backup and restore functionality
+  - Handles backup creation and restoration of bookmark files
+  - Supports versioned backups with metadata
+
+- **progress_tracker.py**: Progress tracking utilities
+  - `ProgressTracker`: Thread-safe progress tracking for batch operations
+  - Supports detailed logging and status reporting
+
+- **spinner.py**: CLI spinner animations
+  - Provides visual feedback for long-running operations
+
 ### Main Tools
 
 - **bookmark_enricher.py**: Primary enrichment tool
@@ -104,6 +143,16 @@ python util/bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm
   - Uses existing enriched bookmarks as context for new enrichments
   - Generates descriptions and tags using local LLM
   - Includes comprehensive error tracking and reporting
+
+- **bookmark_intelligence.py**: Analysis and search tool
+  - `BookmarkIntelligence`: Provides semantic search, duplicate detection, and analysis
+  - Supports category suggestions and bookmark organization
+  - Interactive search capabilities with similarity scoring
+
+- **bookmark_importer.py**: Browser bookmark import tool
+  - Imports bookmarks from various browser export formats
+  - Handles HTML, JSON, and other bookmark export formats
+  - Converts to standardized JSON format for processing
 
 ### Data Flow
 
@@ -138,11 +187,14 @@ The system supports flexible bookmark formats with these mappings:
 
 ## Testing Structure
 
-Tests are located in `util/tests/` with pytest configuration in `pytest.ini`:
+Tests are located in `tests/` with pytest configuration in `pyproject.toml`:
 - `test_models.py`: Data model validation tests
 - `test_bookmark_loader.py`: File I/O operation tests
 - `test_web_extractor.py`: Web scraping functionality tests
 - `test_vector_store.py`: Vector database operation tests
+- `test_bookmark_intelligence.py`: Intelligence and search functionality tests
+- `test_suggest_categories.py`: Category suggestion functionality tests
+- `test_config.py`: Configuration management tests
 - `conftest.py`: Shared test fixtures and configuration
 
 Tests use markers:
@@ -152,19 +204,25 @@ Tests use markers:
 
 ## Dependencies
 
-**Production** (requirements.txt):
-- `requests`: HTTP client for web scraping
-- `beautifulsoup4`: HTML parsing
-- `chromadb`: Vector database
-- `ollama`: Local LLM API client
+**Production** (defined in pyproject.toml):
+- `requests==2.32.4`: HTTP client for web scraping
+- `beautifulsoup4==4.13.4`: HTML parsing
+- `chromadb==1.0.15`: Vector database
+- `ollama==0.5.1`: Local LLM API client
 - `lxml`: XML/HTML parser
+- `hdbscan==0.8.33`: Density-based clustering for category suggestions
+- `scikit-learn==1.4.2`: Machine learning utilities
+- `pydantic-settings==2.10.1`: Configuration management
 
-**Development** (requirements-dev.txt):
-- `pytest`: Testing framework
-- `pytest-cov`: Coverage reporting
-- `black`: Code formatting
-- `flake8`: Style checking
-- `mypy`: Type checking
+**Development** (optional dependencies):
+- `pytest==8.4.1`: Testing framework
+- `pytest-cov==6.2.1`: Coverage reporting
+- `pytest-mock==3.14.1`: Mocking utilities
+- `pytest-asyncio==1.1.0`: Async test support
+- `black==25.1.0`: Code formatting
+- `ruff==0.12.3`: Fast Python linter (replaces flake8)
+- `mypy==1.17.0`: Type checking
+- `isort==6.0.1`: Import sorting
 
 ## Common Issues
 

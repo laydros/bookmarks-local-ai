@@ -74,17 +74,33 @@ class BookmarkImporter:
 
         raise ValueError("Unrecognized bookmark format")
 
-    def import_from_file(self, new_bookmarks_file: str) -> List[str]:
-        """Import bookmarks from JSON, HTML, Markdown, or plain URL files."""
+    def import_from_file(self, new_bookmarks_file: str, check_duplicates: bool = True) -> tuple[List[str], List[str]]:
+        """Import bookmarks from JSON, HTML, Markdown, or plain URL files.
+        
+        Args:
+            new_bookmarks_file: Path to file containing bookmarks to import
+            check_duplicates: Whether to check for duplicates before importing
+            
+        Returns:
+            Tuple of (dead_links, skipped_duplicates)
+        """
 
         bookmarks = self._parse_new_bookmarks(new_bookmarks_file)
 
         dead_links: List[str] = []
+        skipped_duplicates: List[str] = []
 
         for bm in bookmarks:
             if not self.web_extractor.is_valid_url(bm.url):
                 dead_links.append(bm.url)
                 continue
+
+            # Check for duplicates before processing
+            if check_duplicates:
+                duplicate = self.intelligence.is_duplicate(bm)
+                if duplicate:
+                    skipped_duplicates.append(f"{bm.url} (duplicate of existing bookmark: {duplicate.title})")
+                    continue
 
             if not bm.title or not bm.description:
                 title, desc = self.web_extractor.extract_content(bm.url)
@@ -116,19 +132,29 @@ class BookmarkImporter:
             bm.source_file = os.path.basename(target_path)
             existing.append(bm)
             self.loader.save_to_file(existing, target_path)
+            
+            # Add to intelligence bookmarks list for subsequent duplicate checks
+            self.intelligence.bookmarks.append(bm)
 
-        return dead_links
+        return dead_links, skipped_duplicates
 
     @staticmethod
-    def print_summary(dead_links: List[str]) -> None:
+    def print_summary(dead_links: List[str], skipped_duplicates: List[str]) -> None:
         """Print summary of import results."""
         print("\nImport Summary")
-        if not dead_links:
-            print("All links were valid.")
+        
+        if not dead_links and not skipped_duplicates:
+            print("All bookmarks were successfully imported.")
         else:
-            print("The following links were unreachable:")
-            for link in dead_links:
-                print(f"- {link}")
+            if dead_links:
+                print("The following links were unreachable:")
+                for link in dead_links:
+                    print(f"- {link}")
+                    
+            if skipped_duplicates:
+                print("\nThe following bookmarks were skipped as duplicates:")
+                for duplicate in skipped_duplicates:
+                    print(f"- {duplicate}")
 
 
 def main() -> None:
@@ -141,11 +167,16 @@ def main() -> None:
         "new",
         help="Bookmark file to import (JSON, HTML, Markdown, or plain URLs)",
     )
+    parser.add_argument(
+        "--no-duplicate-check",
+        action="store_true", 
+        help="Skip duplicate checking (faster but may create duplicates)"
+    )
     args = parser.parse_args()
 
     importer = BookmarkImporter(args.collection)
-    dead = importer.import_from_file(args.new)
-    BookmarkImporter.print_summary(dead)
+    dead, duplicates = importer.import_from_file(args.new, check_duplicates=not args.no_duplicate_check)
+    BookmarkImporter.print_summary(dead, duplicates)
 
 
 if __name__ == "__main__":
