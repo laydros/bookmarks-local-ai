@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Bookmark importer CLI."""
 
+# ruff: noqa: E402
+
 from __future__ import annotations
+
+from core.env_setup import configure_chromadb_env
+
+configure_chromadb_env()
 
 import argparse
 

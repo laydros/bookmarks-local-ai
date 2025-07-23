@@ -19,12 +19,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-# Disable ChromaDB telemetry noise
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
-os.environ["CHROMA_SERVER_NOFILE"] = "1"
-logging.getLogger("chromadb.telemetry.posthog").setLevel(logging.CRITICAL)
-logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
-
 
 class BookmarkIntelligence:
     """Smart analysis and search for bookmark collections."""
