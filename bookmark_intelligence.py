@@ -755,7 +755,11 @@ def main():
                 base_dir = args.input
             else:
                 base_dir = os.path.dirname(args.input)
-            
+
+            if not intelligence._ensure_indexed():
+                print("Failed to build search index")
+                return
+
             moved = intelligence.category_manager.populate_category_interactive(
                 args.populate_category,
                 intelligence.bookmarks,

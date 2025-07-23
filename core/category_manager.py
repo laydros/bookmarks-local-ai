@@ -89,18 +89,24 @@ class CategoryManager:
             for similar in search_result.similar_bookmarks:
                 bookmark = similar.bookmark
                 score = similar.similarity_score
-                
+
                 # Skip if already in target category
                 if bookmark.source_file and os.path.basename(bookmark.source_file) == target_filename:
                     continue
-                    
-                # Only include high-confidence matches
+
                 if score >= threshold:
                     candidates.append((bookmark, score))
-                    
                 if len(candidates) >= limit:
                     break
-                    
+
+            # Fallback: if nothing met the threshold, return best matches anyway
+            if not candidates:
+                for similar in search_result.similar_bookmarks[:limit]:
+                    bookmark = similar.bookmark
+                    if bookmark.source_file and os.path.basename(bookmark.source_file) == target_filename:
+                        continue
+                    candidates.append((bookmark, similar.similarity_score))
+
         return candidates
 
     def move_bookmarks_to_category(
