@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """Bookmark Intelligence CLI."""
 
+# ruff: noqa: E402
+
 from __future__ import annotations
+
+from core.env_setup import configure_chromadb_env
+
+configure_chromadb_env()
 
 import argparse
 import logging
@@ -16,8 +22,6 @@ from core.category_suggester import CategorySuggester
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-logging.getLogger("chromadb.telemetry.posthog").setLevel(logging.CRITICAL)
-logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 
 
 def main() -> None:
