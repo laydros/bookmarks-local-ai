@@ -119,6 +119,18 @@ python bookmark_intelligence.py json/ --create-category "3d-printing"
 python bookmark_intelligence.py json/ --create-category "web-development"
 ```
 
+**Populate categories intelligently** - Find and move bookmarks to specific categories:
+```bash
+# Find bookmarks that belong in the 3d-printing category
+python bookmark_intelligence.py json/ --populate-category "3d-printing"
+
+# Use filename format (both work identically)
+python bookmark_intelligence.py json/ --populate-category "3d-printing.json"
+
+# Customize suggestions (default: limit=5, threshold=0.85)
+python bookmark_intelligence.py json/ --populate-category "web-development" --limit 10 --threshold 0.8
+```
+
 **Import new bookmarks** - Validate, categorize, and check for duplicates:
 ```bash
 python bookmark_importer.py json/ new_bookmarks.json
@@ -143,6 +155,8 @@ In interactive mode, available commands:
 - `help` - Show available commands
 - `quit` - Exit interactive mode
 
+**Note**: The `--populate-category` feature is only available via CLI, not in interactive mode.
+
 ## Project Structure
 
 ```
@@ -157,6 +171,8 @@ bookmarks-local-ai/
 │   ├── web_extractor.py          # Web content extraction
 │   ├── backup_manager.py         # Backup utilities
 │   ├── config_manager.py         # Configuration management
+│   ├── category_manager.py       # Category creation and population
+│   ├── category_suggester.py     # AI-powered category suggestions
 │   └── progress_tracker.py       # Progress tracking
 ├── tests/                        # Test suite
 │   ├── conftest.py               # Test configuration
@@ -165,6 +181,7 @@ bookmarks-local-ai/
 │   ├── test_vector_store.py      # Vector database tests
 │   ├── test_web_extractor.py     # Web scraping tests
 │   ├── test_enhanced_enricher.py # Enhanced enrichment tests
+│   ├── test_category_manager.py  # Category management tests
 │   └── fixtures/                 # Test data
 ├── pyproject.toml                # Project configuration and dependencies
 └── CLAUDE.md                     # Claude Code instructions
@@ -257,6 +274,36 @@ mypy core/
 **Processing Speed**:
 - ~2-5 bookmarks per minute (includes web scraping delays)
 - Use `--no-delay` flag to process faster (be respectful to websites)
+
+### Category Management Workflow
+
+The bookmark intelligence system provides a complete workflow for organizing your collection:
+
+**1. Discover Categories**: Use `--suggest-categories` to analyze your collection and discover natural groupings
+**2. Create Categories**: Use `--create-category` to create empty category files for organization
+**3. Populate Categories**: Use `--populate-category` to intelligently find and move bookmarks to specific categories
+
+**Category Population Process**:
+- Uses semantic search to find bookmarks similar to the category name
+- Shows high-confidence matches (default threshold: 0.85) with scores and source files
+- Presents small batches (default: 5 suggestions) for user approval
+- Allows selective approval: accept all, none, or choose specific bookmarks
+- Safely moves bookmarks between files and updates all affected JSON files
+- Can be run repeatedly to gradually populate categories over time
+
+**Example Workflow**:
+```bash
+# 1. Discover what categories might be useful
+python bookmark_intelligence.py bookmarks/ --suggest-categories
+
+# 2. Create a specific category you want
+python bookmark_intelligence.py bookmarks/ --create-category "3d-printing"
+
+# 3. Populate it gradually (run multiple times)
+python bookmark_intelligence.py bookmarks/ --populate-category "3d-printing"
+# Review suggestions, select ones to move
+# Re-run to find more candidates
+```
 
 ### Category Suggestion Algorithms
 

@@ -587,10 +587,10 @@ def main():
         "--output-md", help="Write category suggestions to a markdown file"
     )
     parser.add_argument(
-        "--create-category", help="Create a new empty category file with the given name"
+        "--create-category", help="Create a new empty category file (e.g., '3dprinting' creates '3dprinting.json')"
     )
     parser.add_argument(
-        "--populate-category", help="Find and suggest bookmarks for a specific category"
+        "--populate-category", help="Find and suggest bookmarks for a specific category (e.g., '3dprinting' or '3dprinting.json')"
     )
     parser.add_argument(
         "--limit", type=int, default=5, help="Maximum number of suggestions per run (default: 5)"

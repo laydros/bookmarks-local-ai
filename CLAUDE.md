@@ -88,7 +88,11 @@ python bookmark_intelligence.py suggest-categories bookmarks.json
 # Create a new empty category file
 python bookmark_intelligence.py bookmarks.json --create-category "3d-printing"
 # Or use installed script
-bookmark-intelligence bookmarks.json --create-category "web-development"
+bookmark-intelligence bookmarks.json --create-category "web-development" 
+
+# Intelligently populate categories with existing bookmarks
+python bookmark_intelligence.py bookmarks.json --populate-category "3d-printing"
+python bookmark_intelligence.py bookmarks.json --populate-category "3d-printing.json" --limit 10 --threshold 0.8
 
 # Import bookmarks from browser exports with duplicate detection
 python bookmark_importer.py exported_bookmarks.html
@@ -133,6 +137,12 @@ python bookmark_importer.py bookmarks.json new_bookmarks.json --no-duplicate-che
   - Uses HDBSCAN or K-means clustering for grouping similar bookmarks
   - Generates category names and descriptions using LLM
 
+- **category_manager.py**: Category file management
+  - `CategoryManager`: Creates empty category files and populates them intelligently
+  - Finds bookmarks that belong in specific categories using semantic search
+  - Safely moves bookmarks between category files with user approval
+  - Interactive workflow for gradual category population
+
 - **backup_manager.py**: Backup and restore functionality
   - Handles backup creation and restoration of bookmark files
   - Supports versioned backups with metadata
@@ -155,6 +165,7 @@ python bookmark_importer.py bookmarks.json new_bookmarks.json --no-duplicate-che
 - **bookmark_intelligence.py**: Analysis and search tool
   - `BookmarkIntelligence`: Provides semantic search, duplicate detection, and analysis
   - Supports category suggestions and bookmark organization
+  - Category management: create empty categories and intelligently populate them
   - Interactive search capabilities with similarity scoring
 
 - **bookmark_importer.py**: Browser bookmark import tool with duplicate detection

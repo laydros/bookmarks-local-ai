@@ -31,6 +31,7 @@ This repository contains a local RAG powered bookmark intelligence system writte
    python bookmark_enricher.py bookmarks.json
    python bookmark_intelligence.py json/ --search "python"
    python bookmark_intelligence.py json/ --create-category "3d-printing"  # create new category files
+   python bookmark_intelligence.py json/ --populate-category "3d-printing"  # intelligently populate categories
    python bookmark_importer.py json/ new_bookmarks.json  # includes duplicate detection
    ```
 4. Run tests and quality checks:
@@ -59,6 +60,29 @@ python bookmark_importer.py json/ new_bookmarks.json
 
 # Skip duplicate checking for faster import
 python bookmark_importer.py json/ new_bookmarks.json --no-duplicate-check
+```
+
+## Category Management System
+The system includes comprehensive category management capabilities:
+
+**Category Creation and Population**:
+- `--create-category`: Creates empty category JSON files
+- `--populate-category`: Uses semantic search to find bookmarks that belong in specific categories
+- Interactive workflow with user approval for safe bookmark moving
+- Gradual population approach (small batches, high confidence threshold)
+
+**Core Module**: `core/category_manager.py` provides reusable category management functionality used by the CLI interface.
+
+**Example Usage**:
+```bash
+# Create empty category
+python bookmark_intelligence.py json/ --create-category "machine-learning"
+
+# Populate with high-confidence matches (interactive)
+python bookmark_intelligence.py json/ --populate-category "machine-learning"
+
+# Customize parameters
+python bookmark_intelligence.py json/ --populate-category "web-dev" --limit 10 --threshold 0.8
 ```
 
 # Code Guidelines
