@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-"""
-Bookmark Intelligence - Smart search, duplicate detection, and analysis tools
-"""
+"""Bookmark Intelligence - Smart search, duplicate detection, and analysis tools."""
+# ruff: noqa: E402
+
+from core.env_setup import configure_chromadb_env
+
+configure_chromadb_env()
 
 import argparse
 import logging
@@ -21,12 +24,6 @@ from core.category_manager import CategoryManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 logging.getLogger("httpx").setLevel(logging.WARNING)
-
-# Disable ChromaDB telemetry noise
-os.environ["ANONYMIZED_TELEMETRY"] = "False"
-os.environ["CHROMA_SERVER_NOFILE"] = "1"
-logging.getLogger("chromadb.telemetry.posthog").setLevel(logging.CRITICAL)
-logging.getLogger("chromadb.telemetry.product.posthog").setLevel(logging.CRITICAL)
 
 
 class BookmarkIntelligence:
@@ -186,14 +183,16 @@ class BookmarkIntelligence:
 
         return duplicates
 
-    def is_duplicate(self, new_bookmark: Bookmark, similarity_threshold: float = 0.85) -> Optional[Bookmark]:
+    def is_duplicate(
+        self, new_bookmark: Bookmark, similarity_threshold: float = 0.85
+    ) -> Optional[Bookmark]:
         """
         Check if a single bookmark is a duplicate of existing bookmarks.
-        
+
         Args:
             new_bookmark: Bookmark to check for duplicates
             similarity_threshold: Minimum similarity score to consider duplicates
-            
+
         Returns:
             Existing bookmark if duplicate found, None otherwise
         """
@@ -201,7 +200,7 @@ class BookmarkIntelligence:
         for bookmark in self.bookmarks:
             if bookmark.url and new_bookmark.url and bookmark.url == new_bookmark.url:
                 return bookmark
-                
+
         # Check similar title (fast)
         if new_bookmark.title:
             normalized_new_title = new_bookmark.title.lower().strip()
@@ -210,30 +209,35 @@ class BookmarkIntelligence:
                     normalized_title = bookmark.title.lower().strip()
                     if normalized_new_title == normalized_title:
                         return bookmark
-        
+
         # Check content similarity using vector search (slower but more thorough)
         if self._ensure_indexed() and new_bookmark.description:
             try:
-                search_content = f"{new_bookmark.title} {new_bookmark.description}".strip()
+                search_content = (
+                    f"{new_bookmark.title} {new_bookmark.description}".strip()
+                )
                 if search_content:
                     results = self.vector_store.search(search_content, n_results=3)
-                    
+
                     for result in results:
-                        if result.get('distances') and len(result['distances'][0]) > 0:
+                        if result.get("distances") and len(result["distances"][0]) > 0:
                             # ChromaDB uses distance (lower is more similar)
                             # Convert to similarity score
-                            distance = result['distances'][0][0]
+                            distance = result["distances"][0][0]
                             similarity = 1.0 - distance
-                            
+
                             if similarity >= similarity_threshold:
                                 # Find the matching bookmark
-                                result_id = result['ids'][0][0]
+                                result_id = result["ids"][0][0]
                                 for bookmark in self.bookmarks:
-                                    if bookmark.url == result_id or str(hash(bookmark.url)) == result_id:
+                                    if (
+                                        bookmark.url == result_id
+                                        or str(hash(bookmark.url)) == result_id
+                                    ):
                                         return bookmark
             except Exception as e:
                 logger.warning(f"Vector similarity check failed: {e}")
-        
+
         return None
 
     def analyze_collection(self) -> Dict:
@@ -286,11 +290,11 @@ class BookmarkIntelligence:
     def create_category(self, category_name: str, output_dir: str = None) -> bool:
         """
         Create a new empty category file.
-        
+
         Args:
             category_name: Name of the category (with or without .json extension)
             output_dir: Directory to create the file in (defaults to input_path)
-            
+
         Returns:
             True if successful, False otherwise
         """
@@ -303,7 +307,7 @@ class BookmarkIntelligence:
                     output_dir = os.path.dirname(self.input_path)
             else:
                 output_dir = "."
-        
+
         return self.category_manager.create_category(category_name, output_dir)
 
     def suggest_categorization(
@@ -352,7 +356,9 @@ class BookmarkIntelligence:
     def interactive_mode(self):
         """Run interactive query interface."""
         print("🔍 Bookmark Intelligence - Interactive Mode")
-        print("Commands: search <query>, duplicates, analyze, categorize <url>, create <category>, quit")
+        print(
+            "Commands: search <query>, duplicates, analyze, categorize <url>, create <category>, quit"
+        )
         print("-" * 60)
 
         while True:
@@ -587,16 +593,24 @@ def main():
         "--output-md", help="Write category suggestions to a markdown file"
     )
     parser.add_argument(
-        "--create-category", help="Create a new empty category file (e.g., '3dprinting' creates '3dprinting.json')"
+        "--create-category",
+        help="Create a new empty category file (e.g., '3dprinting' creates '3dprinting.json')",
     )
     parser.add_argument(
-        "--populate-category", help="Find and suggest bookmarks for a specific category (e.g., '3dprinting' or '3dprinting.json')"
+        "--populate-category",
+        help="Find and suggest bookmarks for a specific category (e.g., '3dprinting' or '3dprinting.json')",
     )
     parser.add_argument(
-        "--limit", type=int, default=5, help="Maximum number of suggestions per run (default: 5)"
+        "--limit",
+        type=int,
+        default=5,
+        help="Maximum number of suggestions per run (default: 5)",
     )
     parser.add_argument(
-        "--threshold", type=float, default=0.85, help="Minimum confidence threshold (default: 0.85)"
+        "--threshold",
+        type=float,
+        default=0.85,
+        help="Minimum confidence threshold (default: 0.85)",
     )
 
     args = parser.parse_args()
@@ -739,7 +753,7 @@ def main():
                             output_dir = args.input
                         else:
                             output_dir = os.path.dirname(args.input)
-                    
+
                     suggester.create_placeholder_files(suggestions, output_dir)
                     print(f"Created files in {output_dir}")
 
@@ -765,9 +779,9 @@ def main():
                 intelligence.bookmarks,
                 base_dir,
                 limit=args.limit,
-                threshold=args.threshold
+                threshold=args.threshold,
             )
-            
+
             if moved:
                 print(f"\n✓ Successfully populated {args.populate_category} category")
                 # Re-index after moving bookmarks
