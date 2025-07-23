@@ -30,6 +30,7 @@ This repository contains a local RAG powered bookmark intelligence system writte
    ```bash
    python bookmark_enricher.py bookmarks.json
    python bookmark_intelligence.py json/ --search "python"
+   python bookmark_intelligence.py json/ --create-category "3d-printing"  # create new category files
    python bookmark_importer.py json/ new_bookmarks.json  # includes duplicate detection
    ```
 4. Run tests and quality checks:

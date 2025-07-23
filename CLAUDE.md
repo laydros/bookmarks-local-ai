@@ -85,6 +85,11 @@ python bookmark_intelligence.py duplicates bookmarks.json
 # Suggest categories for bookmark organization
 python bookmark_intelligence.py suggest-categories bookmarks.json
 
+# Create a new empty category file
+python bookmark_intelligence.py bookmarks.json --create-category "3d-printing"
+# Or use installed script
+bookmark-intelligence bookmarks.json --create-category "web-development"
+
 # Import bookmarks from browser exports with duplicate detection
 python bookmark_importer.py exported_bookmarks.html
 # Or use installed script

@@ -113,6 +113,12 @@ python bookmark_intelligence.py json/ --suggest-categories --use-kmeans 5
 python bookmark_intelligence.py json/ --suggest-categories --output-md category_suggestions.md
 ```
 
+**Create new category** - Create empty category files for organization:
+```bash
+python bookmark_intelligence.py json/ --create-category "3d-printing"
+python bookmark_intelligence.py json/ --create-category "web-development"
+```
+
 **Import new bookmarks** - Validate, categorize, and check for duplicates:
 ```bash
 python bookmark_importer.py json/ new_bookmarks.json
@@ -133,6 +139,7 @@ In interactive mode, available commands:
 - `duplicates` - Find and optionally remove duplicate bookmarks
 - `analyze` - Analyze collection statistics
 - `categorize <url>` - Suggest category for URL
+- `create <category>` - Create new empty category file
 - `help` - Show available commands
 - `quit` - Exit interactive mode
 
