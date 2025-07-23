@@ -281,6 +281,48 @@ class BookmarkIntelligence:
             "file_distribution": dict(file_counts),
         }
 
+    def create_category(self, category_name: str, output_dir: str = None) -> bool:
+        """
+        Create a new empty category file.
+        
+        Args:
+            category_name: Name of the category (with or without .json extension)
+            output_dir: Directory to create the file in (defaults to input_path)
+            
+        Returns:
+            True if successful, False otherwise
+        """
+        import json
+        
+        # Use input path as default output directory
+        if not output_dir:
+            if self.input_path:
+                if os.path.isdir(self.input_path):
+                    output_dir = self.input_path
+                else:
+                    output_dir = os.path.dirname(self.input_path)
+            else:
+                output_dir = "."
+        
+        # Ensure .json extension
+        if not category_name.endswith('.json'):
+            category_name = f"{category_name}.json"
+        
+        file_path = os.path.join(output_dir, category_name)
+        
+        if os.path.exists(file_path):
+            logger.warning(f"Category file already exists: {file_path}")
+            return False
+        
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump([], f, indent=2, ensure_ascii=False)
+            logger.info(f"Created empty category file: {file_path}")
+            return True
+        except Exception as e:
+            logger.error(f"Error creating category file: {e}")
+            return False
+
     def suggest_categorization(
         self, new_bookmark: Bookmark, n_suggestions: int = 3
     ) -> List[Tuple[str, float]]:
@@ -327,7 +369,7 @@ class BookmarkIntelligence:
     def interactive_mode(self):
         """Run interactive query interface."""
         print("🔍 Bookmark Intelligence - Interactive Mode")
-        print("Commands: search <query>, duplicates, analyze, categorize <url>, quit")
+        print("Commands: search <query>, duplicates, analyze, categorize <url>, create <category>, quit")
         print("-" * 60)
 
         while True:
@@ -357,12 +399,23 @@ class BookmarkIntelligence:
                     else:
                         print("Please provide a URL")
 
+                elif command.startswith("create "):
+                    category = command[7:].strip()
+                    if category:
+                        if self.create_category(category):
+                            print(f"✓ Created category: {category}")
+                        else:
+                            print(f"✗ Failed to create category: {category}")
+                    else:
+                        print("Please provide a category name")
+
                 elif command.lower() == "help":
                     print("Available commands:")
                     print("  search <query>     - Search bookmarks")
                     print("  duplicates         - Find duplicate bookmarks")
                     print("  analyze           - Analyze collection")
                     print("  categorize <url>  - Suggest category for URL")
+                    print("  create <category>  - Create new empty category file")
                     print("  quit              - Exit interactive mode")
 
                 else:
@@ -550,6 +603,9 @@ def main():
     parser.add_argument(
         "--output-md", help="Write category suggestions to a markdown file"
     )
+    parser.add_argument(
+        "--create-category", help="Create a new empty category file with the given name"
+    )
 
     args = parser.parse_args()
 
@@ -694,6 +750,12 @@ def main():
                     
                     suggester.create_placeholder_files(suggestions, output_dir)
                     print(f"Created files in {output_dir}")
+
+        elif args.create_category:
+            if intelligence.create_category(args.create_category):
+                print(f"✓ Created category: {args.create_category}")
+            else:
+                print(f"✗ Failed to create category: {args.create_category}")
 
         elif args.interactive:
             intelligence.interactive_mode()
