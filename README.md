@@ -68,6 +68,11 @@ Enrich all JSON files in a directory:
 python bookmark_enricher.py json/ --directory
 ```
 
+Process a limited number of bookmarks:
+```bash
+python bookmark_enricher.py json/ --directory --limit 10
+```
+
 Custom models:
 ```bash
 python bookmark_enricher.py json/ --embedding-model mxbai-embed-large --llm-model mistral:7b
