@@ -651,8 +651,9 @@ def main():
                 print("No suggestions available.")
 
         elif args.suggest_categories:
-            suggester = CategorySuggester(intelligence.vector_store)
-            suggestions = suggester.suggest(intelligence.bookmarks, args.use_kmeans)
+            with Spinner("Analyzing bookmarks and generating category suggestions..."):
+                suggester = CategorySuggester(intelligence.vector_store)
+                suggestions = suggester.suggest(intelligence.bookmarks, args.use_kmeans)
 
             if not suggestions:
                 print("No category suggestions available.")

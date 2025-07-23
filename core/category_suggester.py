@@ -89,10 +89,31 @@ class CategorySuggester:
         """Call LLM to get a name/description for a cluster."""
         sample = list(bookmarks)[:5]
         bullet_lines = [f"- {b.title}: {b.url}" for b in sample]
+        
+        # Extract existing category names from source files to learn naming style
+        existing_names = set()
+        for bookmark in bookmarks:
+            if bookmark.source_file:
+                # Extract filename without path and extension
+                filename = os.path.basename(bookmark.source_file)
+                if filename.endswith('.json'):
+                    category_name = filename[:-5]  # Remove .json extension
+                    existing_names.add(category_name)
+        
+        # Create examples of existing naming style
+        style_examples = ""
+        if existing_names:
+            example_names = sorted(list(existing_names))[:5]  # Show up to 5 examples
+            style_examples = (
+                f"Follow the existing naming style from these categories: {', '.join(example_names)}. "
+                "Match their format, length, and style conventions. "
+            )
+        
         prompt = (
             "Suggest a short category name and one sentence description for "
-            "the following bookmarks. You MUST respond with ONLY valid JSON "
-            'in this exact format: {"name":"category name","description":"description"}\n\n'
+            "the following bookmarks. " + style_examples +
+            "You MUST respond with ONLY valid JSON "
+            'in this exact format: {"name":"category-name","description":"description"}\n\n'
             "Do not include any other text before or after the JSON.\n\n"
             + "\n".join(bullet_lines)
         )
