@@ -369,7 +369,10 @@ Respond ONLY with valid JSON in this exact format:
                 return None
 
     def process_single_file(
-        self, input_file: str, output_file: Optional[str] = None
+        self,
+        input_file: str,
+        output_file: Optional[str] = None,
+        limit: Optional[int] = None,
     ) -> None:
         """
         Process bookmarks from a single file.
@@ -388,7 +391,7 @@ Respond ONLY with valid JSON in this exact format:
             return
 
         # Process bookmarks
-        self._process_bookmarks(bookmarks)
+        self._process_bookmarks(bookmarks, limit=limit)
 
         # Save results
         if output_file is None:
@@ -402,7 +405,9 @@ Respond ONLY with valid JSON in this exact format:
         # Print summary
         self.summary.print_summary()
 
-    def process_directory(self, directory_path: str) -> None:
+    def process_directory(
+        self, directory_path: str, limit: Optional[int] = None
+    ) -> None:
         """
         Process all JSON files in a directory.
 
@@ -425,7 +430,7 @@ Respond ONLY with valid JSON in this exact format:
         )
 
         # Process bookmarks
-        self._process_bookmarks(all_bookmarks)
+        self._process_bookmarks(all_bookmarks, limit=limit)
 
         # Save results back to original files
         if self.loader.save_by_source_file(all_bookmarks, directory_path):
@@ -436,7 +441,9 @@ Respond ONLY with valid JSON in this exact format:
         # Print summary
         self.summary.print_summary()
 
-    def _process_bookmarks(self, bookmarks: List[Bookmark]) -> None:
+    def _process_bookmarks(
+        self, bookmarks: List[Bookmark], limit: Optional[int] = None
+    ) -> None:
         """
         Process a list of bookmarks (shared logic).
 
@@ -457,6 +464,8 @@ Respond ONLY with valid JSON in this exact format:
 
         # Process unenriched bookmarks
         unenriched_bookmarks = self.loader.filter_unenriched(bookmarks)
+        if limit is not None and limit > 0:
+            unenriched_bookmarks = unenriched_bookmarks[:limit]
         logger.info(f"Starting enrichment of {len(unenriched_bookmarks)} bookmarks...")
 
         for i, bookmark in enumerate(unenriched_bookmarks):
@@ -505,6 +514,13 @@ def main():
         action="store_true",
         help="Process all JSON files in the specified directory",
     )
+    parser.add_argument(
+        "--limit",
+        "-n",
+        type=int,
+        default=None,
+        help="Only process the first N unenriched bookmarks",
+    )
 
     args = parser.parse_args()
 
@@ -525,9 +541,9 @@ def main():
     # Process based on mode
     try:
         if args.directory or os.path.isdir(args.input):
-            enricher.process_directory(args.input)
+            enricher.process_directory(args.input, limit=args.limit)
         else:
-            enricher.process_single_file(args.input, args.output)
+            enricher.process_single_file(args.input, args.output, limit=args.limit)
     except KeyboardInterrupt:
         logger.info("Processing interrupted by user")
     except Exception as e:
