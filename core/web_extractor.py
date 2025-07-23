@@ -8,6 +8,8 @@ import logging
 from typing import Tuple
 from urllib.parse import urlparse
 
+from .url_utils import is_valid_url
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,7 +25,10 @@ class WebExtractor:
         """
         self.timeout = timeout
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36"
+            )
         }
 
     def extract_content(self, url: str) -> Tuple[str, str]:
@@ -93,18 +98,15 @@ class WebExtractor:
         Returns:
             True if URL is valid and accessible, False otherwise
         """
-        try:
-            parsed = urlparse(url)
-            if not all([parsed.scheme, parsed.netloc]):
-                return False
+        if not is_valid_url(url):
+            return False
 
-            # Quick HEAD request to check if URL is accessible
+        try:
             response = requests.head(
                 url, timeout=5, headers=self.headers, allow_redirects=True
             )
             return response.status_code < 400
-
-        except:
+        except Exception:
             return False
 
     def extract_domain(self, url: str) -> str:
@@ -119,5 +121,5 @@ class WebExtractor:
         """
         try:
             return urlparse(url).netloc
-        except:
+        except Exception:
             return ""

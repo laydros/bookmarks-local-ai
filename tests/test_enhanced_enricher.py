@@ -2,12 +2,11 @@
 Tests for enhanced bookmark enricher functionality.
 """
 
-import pytest
 import tempfile
 import os
-from unittest.mock import Mock, patch
 from core.config_manager import BookmarkConfig
-from core.models import Bookmark, is_valid_url
+from core.models import Bookmark
+from core.url_utils import is_valid_url
 
 
 class TestURLValidation:
