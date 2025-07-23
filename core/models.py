@@ -2,75 +2,11 @@
 Data models and types for bookmark processing.
 """
 
-import re
-from typing import Dict, List, Optional, Union
+from typing import Dict, List
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
-
-def is_valid_url(url: str) -> bool:
-    """
-    Validate if a URL is properly formatted.
-
-    Args:
-        url: URL string to validate
-
-    Returns:
-        True if URL is valid, False otherwise
-    """
-    if not url or not isinstance(url, str):
-        return False
-
-    try:
-        parsed = urlparse(url.strip())
-
-        # Must have scheme and netloc
-        if not parsed.scheme or not parsed.netloc:
-            return False
-
-        # Check for valid scheme
-        if parsed.scheme not in ["http", "https", "ftp", "ftps"]:
-            return False
-
-        # Basic domain validation - simplified
-        domain = parsed.netloc.split(":")[0]  # Remove port if present
-
-        # Domain cannot be empty or start/end with dots
-        if not domain or domain.startswith(".") or domain.endswith("."):
-            return False
-
-        # Allow localhost
-        if domain == "localhost":
-            return True
-
-        # Simple IP check - avoid complex regex
-        ip_parts = domain.split(".")
-        if len(ip_parts) == 4:
-            try:
-                for part in ip_parts:
-                    num = int(part)
-                    if not (0 <= num <= 255):
-                        break
-                else:
-                    return True  # Valid IP
-            except ValueError:
-                pass  # Not an IP
-
-        # Domain name check - must have at least one dot and reasonable characters
-        if "." in domain and ".." not in domain:
-            # Check for reasonable characters (letters, numbers, dots, hyphens)
-            allowed_chars = set(
-                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-"
-            )
-            if all(c in allowed_chars for c in domain):
-                # Don't start or end with hyphen
-                if not domain.startswith("-") and not domain.endswith("-"):
-                    return True
-
-        return False
-
-    except Exception:
-        return False
+from .url_utils import is_valid_url
 
 
 @dataclass
@@ -155,7 +91,7 @@ class Bookmark:
         """Extract domain from URL."""
         try:
             return urlparse(self.url).netloc
-        except:
+        except Exception:
             return ""
 
     @property
