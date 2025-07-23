@@ -10,7 +10,8 @@ A local RAG-powered system for enriching and analyzing bookmark collections usin
 - **Duplicate Detection**: Find potential duplicate bookmarks
 - **Gap Analysis**: Identify missing topics in your collection
 - **Auto-Categorization**: Suggest which file/category new bookmarks belong in
-- **Bookmark Importer**: Load new bookmarks from JSON, HTML, Markdown, or plain URL lists and verify links
+- **Category Suggestions**: AI-powered analysis to propose new organizational categories using HDBSCAN or k-means clustering
+- **Bookmark Importer**: Load new bookmarks from JSON, HTML, Markdown, or plain URL lists with automatic duplicate detection and link verification
 
 ## Requirements
 
@@ -101,11 +102,25 @@ python bookmark_intelligence.py json/ --analyze
 python bookmark_intelligence.py json/ --categorize "https://example.com"
 ```
 
-**Import new bookmarks** - Validate and categorize new entries:
+**Category suggestions** - Analyze your collection and propose new organizational categories:
+```bash
+python bookmark_intelligence.py json/ --suggest-categories
+
+# Force k-means clustering with specific number of categories (2-10 recommended)
+python bookmark_intelligence.py json/ --suggest-categories --use-kmeans 5
+
+# Save suggestions to a markdown file for review
+python bookmark_intelligence.py json/ --suggest-categories --output-md category_suggestions.md
+```
+
+**Import new bookmarks** - Validate, categorize, and check for duplicates:
 ```bash
 python bookmark_importer.py json/ new_bookmarks.json
 # Or import from browser HTML/Markdown/plain text
 python bookmark_importer.py json/ exported_bookmarks.html
+
+# Skip duplicate checking for faster import (not recommended)
+python bookmark_importer.py json/ new_bookmarks.json --no-duplicate-check
 ```
 
 **Interactive mode** - Explore your bookmarks interactively:
@@ -127,6 +142,7 @@ In interactive mode, available commands:
 bookmarks-local-ai/
 ├── bookmark_enricher.py          # Main enrichment tool
 ├── bookmark_intelligence.py      # Smart search and analysis tool
+├── bookmark_importer.py          # Import tool with duplicate detection
 ├── core/                         # Shared utilities
 │   ├── models.py                 # Data models and validation
 │   ├── bookmark_loader.py        # File I/O operations
@@ -205,6 +221,8 @@ mypy core/
 - `test_vector_store.py` - ChromaDB and vector operations tests
 - `test_config.py` - Configuration management tests
 - `test_enhanced_enricher.py` - Enhanced enrichment functionality tests
+- `test_bookmark_importer.py` - Import functionality tests
+- `test_duplicate_detection.py` - Duplicate detection tests
 - `conftest.py` - Shared test fixtures and configuration
 - `fixtures/` - Sample test data and bookmark files
 
@@ -232,6 +250,31 @@ mypy core/
 **Processing Speed**:
 - ~2-5 bookmarks per minute (includes web scraping delays)
 - Use `--no-delay` flag to process faster (be respectful to websites)
+
+### Category Suggestion Algorithms
+
+The `--suggest-categories` feature uses clustering algorithms to group similar bookmarks and suggest new organizational categories.
+
+**HDBSCAN (Default)**:
+- **What it does**: Finds natural clusters of similar bookmarks by analyzing their semantic embeddings (vector representations of their content)
+- **How it works**: Identifies "dense regions" where bookmarks have very similar content, leaving outliers ungrouped
+- **Pros**: Discovers organic groupings, handles different cluster sizes well, doesn't force inappropriate groupings
+- **Cons**: May find fewer clusters than expected if your bookmarks don't have strong natural groupings
+- **Best for**: Collections with clear thematic groups (e.g., separate clusters for "Python tutorials", "Machine learning papers", "Cooking recipes")
+
+**K-means (Fallback/Forced)**:
+- **What it does**: Divides your bookmarks into exactly K groups by minimizing the "distance" between bookmarks in each group
+- **How it works**: Like sorting items into K bins such that items in each bin are as similar as possible to each other
+- **Pros**: Always produces exactly the number of categories you specify, more predictable results
+- **Cons**: May create artificial groupings, struggles with clusters of very different sizes
+- **Best for**: When you want a specific number of categories regardless of natural groupings
+
+**Usage Recommendations**:
+- Try default HDBSCAN first - it will find the most meaningful natural groupings
+- Use `--use-kmeans 5` if HDBSCAN finds too few categories or you want exactly N categories
+- Start with 3-8 categories - more becomes hard to manage, fewer may be too broad
+
+**Example**: With 2000 bookmarks about programming, HDBSCAN might find 6 natural clusters (Python, JavaScript, DevOps, Databases, Frontend, Backend), while k-means with k=8 would force exactly 8 groups even if some are artificially split.
 
 ## Privacy & Security
 
@@ -304,6 +347,8 @@ This project uses `pyproject.toml` for dependency management. Key dependencies i
 - [x] Auto-categorization
 - [x] Interactive query interface
 - [x] Collection analysis and insights
+- [x] Import duplicate detection (URL, title, and content similarity)
+- [x] Category suggestions with HDBSCAN and k-means clustering
 - [ ] Gap analysis (identify missing topics)
 - [ ] Web UI (possible future enhancement)
 - [ ] Bookmark recommendation engine

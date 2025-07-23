@@ -85,10 +85,13 @@ python bookmark_intelligence.py duplicates bookmarks.json
 # Suggest categories for bookmark organization
 python bookmark_intelligence.py suggest-categories bookmarks.json
 
-# Import bookmarks from browser exports
+# Import bookmarks from browser exports with duplicate detection
 python bookmark_importer.py exported_bookmarks.html
 # Or use installed script
 bookmark-importer exported_bookmarks.html
+
+# Skip duplicate checking for faster import (not recommended)
+python bookmark_importer.py bookmarks.json new_bookmarks.json --no-duplicate-check
 ```
 
 ## Architecture
@@ -149,10 +152,13 @@ bookmark-importer exported_bookmarks.html
   - Supports category suggestions and bookmark organization
   - Interactive search capabilities with similarity scoring
 
-- **bookmark_importer.py**: Browser bookmark import tool
-  - Imports bookmarks from various browser export formats
-  - Handles HTML, JSON, and other bookmark export formats
-  - Converts to standardized JSON format for processing
+- **bookmark_importer.py**: Browser bookmark import tool with duplicate detection
+  - Imports bookmarks from various browser export formats (HTML, JSON, Markdown, plain URLs)
+  - **Automatic duplicate detection**: Checks for URL matches, title matches, and content similarity
+  - **Multi-level checking**: Fast URL/title checks first, then semantic content similarity via vector search
+  - **Batch-aware**: Prevents duplicates within the same import session
+  - **Optional bypass**: `--no-duplicate-check` flag for faster imports when duplicates aren't a concern
+  - Converts to standardized JSON format and categorizes automatically
 
 ### Data Flow
 
@@ -194,6 +200,8 @@ Tests are located in `tests/` with pytest configuration in `pyproject.toml`:
 - `test_vector_store.py`: Vector database operation tests
 - `test_bookmark_intelligence.py`: Intelligence and search functionality tests
 - `test_suggest_categories.py`: Category suggestion functionality tests
+- `test_bookmark_importer.py`: Import functionality tests
+- `test_duplicate_detection.py`: Duplicate detection tests
 - `test_config.py`: Configuration management tests
 - `conftest.py`: Shared test fixtures and configuration
 

@@ -1,12 +1,12 @@
 <!-- AI_AGENT_GUIDANCE: This file provides AI agents with instructions on interacting with this codebase. -->
 
 # Introduction
-This repository contains a local RAG powered bookmark intelligence system written in Python. It enriches bookmark collections with AI generated descriptions and tags using local models via Ollama and stores embeddings in ChromaDB. This document is aimed at AI coding assistants and summarizes how the project is organized and how common development tasks are performed.
+This repository contains a local RAG powered bookmark intelligence system written in Python. It enriches bookmark collections with AI generated descriptions and tags using local models via Ollama and stores embeddings in ChromaDB. The system includes semantic search, duplicate detection, and intelligent import capabilities. This document is aimed at AI coding assistants and summarizes how the project is organized and how common development tasks are performed.
 
 # Project Structure
 - `bookmark_enricher.py` – command line tool that enriches bookmark files.
 - `bookmark_intelligence.py` – semantic search and analysis tool.
-- `bookmark_importer.py` – import bookmarks from various formats.
+- `bookmark_importer.py` – import bookmarks from various formats with automatic duplicate detection.
 - `core/` – reusable modules such as models, bookmark loader, vector store and helpers.
 - `tests/` – pytest suite covering the modules and command line tools.
 - `default_config.txt` – example configuration values.
@@ -30,6 +30,7 @@ This repository contains a local RAG powered bookmark intelligence system writte
    ```bash
    python bookmark_enricher.py bookmarks.json
    python bookmark_intelligence.py json/ --search "python"
+   python bookmark_importer.py json/ new_bookmarks.json  # includes duplicate detection
    ```
 4. Run tests and quality checks:
    ```bash
@@ -38,6 +39,26 @@ This repository contains a local RAG powered bookmark intelligence system writte
    ruff check .
    mypy core/
    ```
+
+# Key Features
+
+## Duplicate Detection System
+The bookmark importer includes a sophisticated multi-level duplicate detection system:
+
+1. **URL Matching** (fastest): Exact URL comparison
+2. **Title Matching** (fast): Normalized, case-insensitive title comparison  
+3. **Content Similarity** (thorough): Semantic similarity using vector embeddings from the already-loaded ChromaDB index
+
+The system is designed to be efficient by leveraging the existing `BookmarkIntelligence` instance that already has the vector database loaded. This means duplicate checking adds minimal overhead to the import process.
+
+**Usage:**
+```bash
+# Default: includes duplicate detection
+python bookmark_importer.py json/ new_bookmarks.json
+
+# Skip duplicate checking for faster import
+python bookmark_importer.py json/ new_bookmarks.json --no-duplicate-check
+```
 
 # Code Guidelines
 - Follow [PEP 8](https://peps.python.org/pep-0008/) with 4‑space indentation.
