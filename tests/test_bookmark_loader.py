@@ -17,15 +17,31 @@ def temp_csv_file(sample_bookmarks):
         mode="w", suffix=".csv", delete=False, newline=""
     ) as f:
         writer = csv.writer(f)
-        writer.writerow(["link", "title", "excerpt", "tags", "type"])
+        writer.writerow(
+            [
+                "title",
+                "note",
+                "excerpt",
+                "url",
+                "folder",
+                "tags",
+                "created",
+                "highlights",
+                "favorite",
+            ]
+        )
         for b in sample_bookmarks:
             writer.writerow(
                 [
-                    b.url,
                     b.title,
-                    b.description or b.excerpt,
+                    b.description,
+                    b.excerpt,
+                    b.url,
+                    "",
                     ",".join(b.tags),
-                    b.bookmark_type,
+                    "",
+                    "",
+                    "",
                 ]
             )
         path = f.name
@@ -104,7 +120,7 @@ class TestBookmarkLoader:
             rows = list(csv.DictReader(f))
 
         assert len(rows) == 3
-        assert rows[0]["link"] == "https://python.org"
+        assert rows[0]["url"] == "https://python.org"
 
     def test_save_by_source_file(self, sample_bookmarks, tmp_path):
         """Test saving bookmarks by source file."""

@@ -37,8 +37,32 @@ def create_csv_file(tmp_path, url):
     file_path = tmp_path / "new.csv"
     with open(file_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["link", "title"])
-        writer.writerow([url, "Example"])
+        writer.writerow(
+            [
+                "title",
+                "note",
+                "excerpt",
+                "url",
+                "folder",
+                "tags",
+                "created",
+                "highlights",
+                "favorite",
+            ]
+        )
+        writer.writerow(
+            [
+                "Example",
+                "",
+                "",
+                url,
+                "",
+                "",
+                "",
+                "",
+                "",
+            ]
+        )
     return file_path
 
 

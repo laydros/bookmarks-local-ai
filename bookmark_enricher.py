@@ -28,7 +28,15 @@ def main() -> None:
         "input", help="Input JSON file or directory with bookmark files"
     )
     parser.add_argument(
-        "--output", "-o", help="Output JSON file (only used for single file mode)"
+        "--output",
+        "-o",
+        help="Output file for single file mode",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["csv", "json"],
+        default="csv",
+        help="Output format when --output is not provided (default: csv)",
     )
     parser.add_argument(
         "--embedding-model",
@@ -72,7 +80,12 @@ def main() -> None:
         if args.directory or os.path.isdir(args.input):
             enricher.process_directory(args.input, limit=args.limit)
         else:
-            enricher.process_single_file(args.input, args.output, limit=args.limit)
+            enricher.process_single_file(
+                args.input,
+                args.output,
+                limit=args.limit,
+                output_format=args.format,
+            )
     except KeyboardInterrupt:
         logger.info("Processing interrupted by user")
     except Exception as e:  # noqa: BLE001

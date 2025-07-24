@@ -56,11 +56,13 @@ class BookmarkLoader:
                 reader = csv.DictReader(f)
                 filename = os.path.basename(file_path)
                 for row in reader:
-                    url = row.get("link") or row.get("url") or ""
+                    url = row.get("url") or row.get("link") or ""
                     if not url:
                         continue
                     title = row.get("title", "")
-                    description = row.get("excerpt", "") or row.get("description", "")
+                    note = row.get("note", "")
+                    excerpt = row.get("excerpt", "")
+                    description = note or row.get("description", "") or excerpt
                     tags = [
                         t.strip() for t in row.get("tags", "").split(",") if t.strip()
                     ]
@@ -68,6 +70,7 @@ class BookmarkLoader:
                         url=url,
                         title=title,
                         description=description,
+                        excerpt=excerpt,
                         tags=tags,
                         bookmark_type=row.get("type", "link"),
                     )
@@ -151,7 +154,17 @@ class BookmarkLoader:
     @staticmethod
     def save_to_raindrop_csv(bookmarks: List[Bookmark], file_path: str) -> bool:
         """Save bookmarks to a Raindrop.io compatible CSV file."""
-        fieldnames = ["link", "title", "excerpt", "tags", "type"]
+        fieldnames = [
+            "title",
+            "note",
+            "excerpt",
+            "url",
+            "folder",
+            "tags",
+            "created",
+            "highlights",
+            "favorite",
+        ]
         try:
             with open(file_path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -159,11 +172,15 @@ class BookmarkLoader:
                 for bm in bookmarks:
                     writer.writerow(
                         {
-                            "link": bm.url,
                             "title": bm.title,
-                            "excerpt": bm.description or bm.excerpt,
+                            "note": bm.description,
+                            "excerpt": bm.excerpt,
+                            "url": bm.url,
+                            "folder": "",
                             "tags": ",".join(bm.tags),
-                            "type": bm.bookmark_type,
+                            "created": "",
+                            "highlights": "",
+                            "favorite": "",
                         }
                     )
             logger.info(f"Saved {len(bookmarks)} bookmarks to {file_path}")
