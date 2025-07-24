@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import time
 from typing import List, Optional
 
@@ -322,6 +323,7 @@ class BookmarkEnricher:
         input_file: str,
         output_file: Optional[str] = None,
         limit: Optional[int] = None,
+        output_format: str = "csv",
     ) -> None:
         """Process bookmarks from a single file."""
         logger.info(f"Processing single file: {input_file}")
@@ -335,8 +337,9 @@ class BookmarkEnricher:
         self._process_bookmarks(bookmarks, limit=limit)
 
         if output_file is None:
-            base, ext = os.path.splitext(input_file)
-            output_file = f"{base}_enriched{ext if ext else '.json'}"
+            base, _ = os.path.splitext(input_file)
+            ext = ".csv" if output_format == "csv" else ".json"
+            output_file = f"{base}_enriched{ext}"
 
         if self.loader.save_to_file(bookmarks, output_file):
             logger.info(f"Results saved to {output_file}")
