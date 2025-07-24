@@ -5,8 +5,33 @@ Tests for bookmark loader functionality.
 import pytest
 import json
 import os
+import csv
+import tempfile
 from core.bookmark_loader import BookmarkLoader
 from core.models import Bookmark
+
+
+@pytest.fixture
+def temp_csv_file(sample_bookmarks):
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".csv", delete=False, newline=""
+    ) as f:
+        writer = csv.writer(f)
+        writer.writerow(["link", "title", "excerpt", "tags", "type"])
+        for b in sample_bookmarks:
+            writer.writerow(
+                [
+                    b.url,
+                    b.title,
+                    b.description or b.excerpt,
+                    ",".join(b.tags),
+                    b.bookmark_type,
+                ]
+            )
+        path = f.name
+    yield path
+    if os.path.exists(path):
+        os.unlink(path)
 
 
 class TestBookmarkLoader:
@@ -59,6 +84,27 @@ class TestBookmarkLoader:
         assert len(data) == 3
         assert data[0]["url"] == "https://python.org"
         assert data[0]["title"] == "Python.org"
+
+    def test_load_from_csv(self, temp_csv_file):
+        bookmarks = BookmarkLoader.load_from_file(temp_csv_file)
+
+        assert len(bookmarks) == 3
+        assert bookmarks[0].url == "https://python.org"
+
+    def test_save_to_csv(self, sample_bookmarks, tmp_path):
+        output_file = tmp_path / "out.csv"
+
+        success = BookmarkLoader.save_to_raindrop_csv(
+            sample_bookmarks, str(output_file)
+        )
+        assert success
+        assert output_file.exists()
+
+        with open(output_file, newline="") as f:
+            rows = list(csv.DictReader(f))
+
+        assert len(rows) == 3
+        assert rows[0]["link"] == "https://python.org"
 
     def test_save_by_source_file(self, sample_bookmarks, tmp_path):
         """Test saving bookmarks by source file."""

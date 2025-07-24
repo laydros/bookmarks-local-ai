@@ -62,6 +62,8 @@ A local RAG-powered system for enriching and analyzing bookmark collections usin
 Enrich bookmarks in a single file:
 ```bash
 python bookmark_enricher.py bookmarks.json
+# Use a .csv extension to save results in Raindrop CSV format
+python bookmark_enricher.py bookmarks.json --output enriched.csv
 ```
 
 Enrich all JSON files in a directory:
@@ -136,6 +138,8 @@ python bookmark_intelligence.py json/ --populate-category "web-development" --li
 python bookmark_importer.py json/ new_bookmarks.json
 # Or import from browser HTML/Markdown/plain text
 python bookmark_importer.py json/ exported_bookmarks.html
+# Or import from a Raindrop.io CSV export
+python bookmark_importer.py json/ exported_bookmarks.csv
 
 # Skip duplicate checking for faster import (not recommended)
 python bookmark_importer.py json/ new_bookmarks.json --no-duplicate-check
@@ -202,6 +206,10 @@ The system supports flexible bookmark formats:
   }
 ]
 ```
+
+CSV files exported from Raindrop.io are also supported. The columns should be
+`link`, `title`, `excerpt`, `tags`, and `type`. Any CLI command will read or
+write in this format automatically when the path ends with `.csv`.
 
 ## Development
 

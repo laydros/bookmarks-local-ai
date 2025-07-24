@@ -1,4 +1,5 @@
 import json
+import csv
 from unittest.mock import patch
 
 from core.importer import BookmarkImporter
@@ -29,6 +30,15 @@ def create_markdown_file(tmp_path, url):
 def create_plain_file(tmp_path, url):
     file_path = tmp_path / "new.txt"
     file_path.write_text(url)
+    return file_path
+
+
+def create_csv_file(tmp_path, url):
+    file_path = tmp_path / "new.csv"
+    with open(file_path, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["link", "title"])
+        writer.writerow([url, "Example"])
     return file_path
 
 
@@ -176,3 +186,31 @@ def test_importer_parses_plain_list(mock_summary, tmp_path):
     assert duplicates == []
     bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
     assert any(b.url == "https://plain.com" for b in bookmarks)
+
+
+@patch.object(BookmarkImporter, "print_summary")
+def test_importer_parses_csv(mock_summary, tmp_path):
+    existing_dir = tmp_path / "existing"
+    existing_dir.mkdir()
+    BookmarkLoader.save_to_file([], str(existing_dir / "uncategorized.json"))
+
+    new_file = create_csv_file(tmp_path, "https://csv.com")
+
+    importer = BookmarkImporter(str(existing_dir))
+    with (
+        patch("core.importer.WebExtractor.is_valid_url", return_value=True),
+        patch(
+            "core.importer.WebExtractor.extract_content", return_value=("Title", "Desc")
+        ),
+        patch(
+            "core.importer.BookmarkIntelligence.suggest_categorization",
+            return_value=[("uncategorized.json", 1.0)],
+        ),
+        patch("core.importer.BookmarkIntelligence.is_duplicate", return_value=None),
+    ):
+        dead, duplicates = importer.import_from_file(str(new_file))
+
+    assert dead == []
+    assert duplicates == []
+    bookmarks = BookmarkLoader.load_from_file(str(existing_dir / "uncategorized.json"))
+    assert any(b.url == "https://csv.com" for b in bookmarks)
