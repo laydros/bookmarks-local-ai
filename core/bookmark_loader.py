@@ -5,6 +5,7 @@ Bookmark loading utilities.
 import json
 import os
 import logging
+import csv
 from typing import Dict, List
 from .models import Bookmark
 
@@ -17,14 +18,16 @@ class BookmarkLoader:
     @staticmethod
     def load_from_file(file_path: str) -> List[Bookmark]:
         """
-        Load bookmarks from a single JSON file.
+        Load bookmarks from a single JSON or CSV file.
 
         Args:
-            file_path: Path to JSON file
+            file_path: Path to file
 
         Returns:
             List of Bookmark objects
         """
+        if file_path.endswith(".csv"):
+            return BookmarkLoader.load_from_raindrop_csv(file_path)
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -45,6 +48,37 @@ class BookmarkLoader:
             return []
 
     @staticmethod
+    def load_from_raindrop_csv(file_path: str) -> List[Bookmark]:
+        """Load bookmarks from a Raindrop.io CSV export."""
+        bookmarks: List[Bookmark] = []
+        try:
+            with open(file_path, newline="", encoding="utf-8") as f:
+                reader = csv.DictReader(f)
+                filename = os.path.basename(file_path)
+                for row in reader:
+                    url = row.get("link") or row.get("url") or ""
+                    if not url:
+                        continue
+                    title = row.get("title", "")
+                    description = row.get("excerpt", "") or row.get("description", "")
+                    tags = [
+                        t.strip() for t in row.get("tags", "").split(",") if t.strip()
+                    ]
+                    bm = Bookmark(
+                        url=url,
+                        title=title,
+                        description=description,
+                        tags=tags,
+                        bookmark_type=row.get("type", "link"),
+                    )
+                    bm.source_file = filename
+                    bookmarks.append(bm)
+            logger.info(f"Loaded {len(bookmarks)} bookmarks from {file_path}")
+        except Exception as e:
+            logger.error(f"Error loading CSV {file_path}: {e}")
+        return bookmarks
+
+    @staticmethod
     def load_from_directory(directory_path: str) -> List[Bookmark]:
         """
         Load bookmarks from all JSON files in a directory.
@@ -62,16 +96,16 @@ class BookmarkLoader:
         all_bookmarks = []
         json_files = []
 
-        # Find all JSON files
+        # Find all JSON/CSV files
         for filename in os.listdir(directory_path):
-            if filename.endswith(".json"):
+            if filename.endswith(".json") or filename.endswith(".csv"):
                 json_files.append(os.path.join(directory_path, filename))
 
         if not json_files:
-            logger.warning(f"No JSON files found in {directory_path}")
+            logger.warning(f"No bookmark files found in {directory_path}")
             return []
 
-        logger.info(f"Found {len(json_files)} JSON files to load")
+        logger.info(f"Found {len(json_files)} bookmark files to load")
 
         # Load bookmarks from each file
         for json_file in sorted(json_files):
@@ -84,7 +118,7 @@ class BookmarkLoader:
     @staticmethod
     def save_to_file(bookmarks: List[Bookmark], file_path: str) -> bool:
         """
-        Save bookmarks to a JSON file.
+        Save bookmarks to a JSON or CSV file.
 
         Args:
             bookmarks: List of Bookmark objects
@@ -93,15 +127,47 @@ class BookmarkLoader:
         Returns:
             True if successful, False otherwise
         """
+        if file_path.endswith(".csv"):
+            return BookmarkLoader.save_to_raindrop_csv(bookmarks, file_path)
         try:
             data = [bookmark.to_dict() for bookmark in bookmarks]
 
             with open(file_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False, separators=(",", ": "))
+                json.dump(
+                    data,
+                    f,
+                    indent=2,
+                    ensure_ascii=False,
+                    separators=(",", ": "),
+                )
 
             logger.info(f"Saved {len(bookmarks)} bookmarks to {file_path}")
             return True
 
+        except Exception as e:
+            logger.error(f"Error saving to {file_path}: {e}")
+            return False
+
+    @staticmethod
+    def save_to_raindrop_csv(bookmarks: List[Bookmark], file_path: str) -> bool:
+        """Save bookmarks to a Raindrop.io compatible CSV file."""
+        fieldnames = ["link", "title", "excerpt", "tags", "type"]
+        try:
+            with open(file_path, "w", newline="", encoding="utf-8") as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for bm in bookmarks:
+                    writer.writerow(
+                        {
+                            "link": bm.url,
+                            "title": bm.title,
+                            "excerpt": bm.description or bm.excerpt,
+                            "tags": ",".join(bm.tags),
+                            "type": bm.bookmark_type,
+                        }
+                    )
+            logger.info(f"Saved {len(bookmarks)} bookmarks to {file_path}")
+            return True
         except Exception as e:
             logger.error(f"Error saving to {file_path}: {e}")
             return False

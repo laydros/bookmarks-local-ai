@@ -335,7 +335,8 @@ class BookmarkEnricher:
         self._process_bookmarks(bookmarks, limit=limit)
 
         if output_file is None:
-            output_file = input_file.replace(".json", "_enriched.json")
+            base, ext = os.path.splitext(input_file)
+            output_file = f"{base}_enriched{ext if ext else '.json'}"
 
         if self.loader.save_to_file(bookmarks, output_file):
             logger.info(f"Results saved to {output_file}")

@@ -26,6 +26,8 @@ class BookmarkImporter:
 
     def _parse_new_bookmarks(self, file_path: str) -> List[Bookmark]:
         """Parse bookmarks from various supported formats."""
+        if file_path.endswith(".csv"):
+            return BookmarkLoader.load_from_raindrop_csv(file_path)
         with open(file_path, "r", encoding="utf-8") as f:
             raw = f.read()
 
@@ -68,7 +70,7 @@ class BookmarkImporter:
     def import_from_file(
         self, new_bookmarks_file: str, check_duplicates: bool = True
     ) -> tuple[List[str], List[str]]:
-        """Import bookmarks from JSON, HTML, Markdown, or plain URL files."""
+        """Import bookmarks from JSON, HTML, Markdown, CSV, or plain URL files."""
         bookmarks = self._parse_new_bookmarks(new_bookmarks_file)
 
         dead_links: List[str] = []
