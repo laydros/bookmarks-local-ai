@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Sequence, Tuple
 
 from .bookmark_loader import BookmarkLoader
 from .models import Bookmark
@@ -195,7 +195,9 @@ class CategoryManager:
                 return False
 
             logger.info(
-                f"Successfully moved {len(bookmarks_to_move)} bookmarks to {target_category}"
+                "Successfully moved %d bookmarks to %s",
+                len(bookmarks_to_move),
+                target_category,
             )
             return True
 
@@ -235,7 +237,8 @@ class CategoryManager:
             return False
 
         print(
-            f"\nFound {len(candidates)} potential matches for '{category_name}' category:\n"
+            "\nFound "
+            f"{len(candidates)} potential matches for '{category_name}' category:\n"
         )
 
         for i, (bookmark, score) in enumerate(candidates, 1):

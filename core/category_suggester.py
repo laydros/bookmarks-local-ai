@@ -49,8 +49,6 @@ class CategorySuggester:
 
             # More reasonable cluster size: 3-15 bookmarks per cluster
             min_size = max(3, min(15, len(embeddings) // 50))
-            max_clusters = min(10, len(embeddings) // 20)  # Cap at 10 clusters
-
             clusterer = hdbscan.HDBSCAN(
                 min_cluster_size=min_size,
                 min_samples=max(2, min_size // 2),  # Allow some flexibility
@@ -63,10 +61,12 @@ class CategorySuggester:
             unique_labels.discard(-1)  # Remove noise label
 
             logger.info(
-                f"HDBSCAN: {len(unique_labels)} clusters found with min_cluster_size={min_size}"
+                "HDBSCAN: %s clusters found with min_cluster_size=%s",
+                len(unique_labels),
+                min_size,
             )
 
-            # If we got too few clusters, fall back to k-means for more predictable results
+            # Fall back to k-means if too few clusters
             if len(unique_labels) < 2:
                 logger.info("Too few HDBSCAN clusters, falling back to k-means")
                 raise ValueError("Insufficient clusters")
@@ -107,7 +107,8 @@ class CategorySuggester:
         if existing_names:
             example_names = sorted(list(existing_names))[:5]  # Show up to 5 examples
             style_examples = (
-                f"Follow the existing naming style from these categories: {', '.join(example_names)}. "
+                "Follow the existing naming style from these categories: "
+                f"{', '.join(example_names)}. "
                 "Match their format, length, and style conventions. "
             )
 
@@ -116,8 +117,11 @@ class CategorySuggester:
             "the following bookmarks. "
             + style_examples
             + "You MUST respond with ONLY valid JSON "
-            'in this exact format: {"name":"category-name","description":"description"}\n\n'
-            "Do not include any other text before or after the JSON.\n\n"
+            + (
+                "in this exact format: "
+                '{"name":"category-name","description":"description"}\n\n'
+            )
+            + "Do not include any other text before or after the JSON.\n\n"
             + "\n".join(bullet_lines)
         )
         try:
@@ -237,6 +241,8 @@ class CategorySuggester:
                 break
 
         logger.info(
-            f"Generated {len(suggestions)} category suggestions from {len(sorted_clusters)} clusters"
+            "Generated %d category suggestions from %d clusters",
+            len(suggestions),
+            len(sorted_clusters),
         )
         return suggestions
