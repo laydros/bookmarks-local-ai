@@ -409,7 +409,6 @@ class TestCategoryManagerIntegration:
 
         # Create CategoryManager with real dependencies
         from core.bookmark_loader import BookmarkLoader
-        from core.vector_store import VectorStore
 
         # Mock just the vector store for this test
         mock_vector_store = Mock()

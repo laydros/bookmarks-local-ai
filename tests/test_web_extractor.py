@@ -2,7 +2,6 @@
 Tests for web content extraction.
 """
 
-import pytest
 import requests
 from unittest.mock import Mock, patch
 from core.web_extractor import WebExtractor

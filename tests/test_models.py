@@ -2,7 +2,6 @@
 Tests for data models.
 """
 
-import pytest
 from core.models import Bookmark, SimilarBookmark, SearchResult, DuplicateGroup
 
 
@@ -218,7 +217,10 @@ class TestDuplicateGroup:
         bookmark1 = Bookmark(url="https://example.com", title="Short")
         bookmark2 = Bookmark(
             url="https://example.com",
-            title="Very long title that should be truncated because it exceeds fifty characters",
+            title=(
+                "Very long title that should be truncated because it exceeds "
+                "fifty characters"
+            ),
         )
 
         group = DuplicateGroup(

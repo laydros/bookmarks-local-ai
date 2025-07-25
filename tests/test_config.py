@@ -2,11 +2,8 @@
 Tests for configuration management.
 """
 
-import pytest
 import os
 import tempfile
-import yaml
-import json
 from core.config_manager import (
     BookmarkConfig,
     ModelConfig,

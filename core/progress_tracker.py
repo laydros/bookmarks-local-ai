@@ -3,7 +3,6 @@ Progress tracking and reporting utilities.
 """
 
 import time
-import sys
 from typing import Optional
 from dataclasses import dataclass
 import logging

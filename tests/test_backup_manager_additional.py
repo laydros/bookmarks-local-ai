@@ -1,6 +1,5 @@
 import os
 import json
-import tempfile
 from core.backup_manager import BackupManager, create_safety_backup
 
 
@@ -34,7 +33,7 @@ def test_get_backup_stats_and_extract(tmp_path):
     manager = BackupManager(backup_dir=str(tmp_path / "bk"))
     # create two backups to ensure stats count >1
     first = manager.create_backup(str(test_file))
-    second = manager.create_backup(str(test_file), "second.backup")
+    manager.create_backup(str(test_file), "second.backup")
     stats = manager.get_backup_stats()
     assert stats["total_backups"] >= 2
     assert stats["total_size_bytes"] > 0

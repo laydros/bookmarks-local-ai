@@ -2,8 +2,7 @@
 Tests for vector store operations.
 """
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from core.vector_store import VectorStore
 from core.models import Bookmark
 

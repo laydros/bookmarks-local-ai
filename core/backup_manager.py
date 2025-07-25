@@ -4,8 +4,6 @@ Backup and safety utilities for bookmark processing.
 
 import os
 import shutil
-import json
-import time
 from datetime import datetime
 from typing import List, Optional, Dict
 import logging
