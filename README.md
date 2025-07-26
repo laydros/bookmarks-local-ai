@@ -247,6 +247,8 @@ ruff check --fix .
 
 # Type checking
 mypy core/
+# Note: The project root is not a Python package. `__init__.py` was removed to
+# avoid mypy errors about the hyphenated repository name.
 ```
 
 ### Test Structure
