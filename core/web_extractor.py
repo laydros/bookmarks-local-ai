@@ -2,8 +2,8 @@
 Web content extraction utilities.
 """
 
-import requests
-from bs4 import BeautifulSoup
+import requests  # type: ignore
+from bs4 import BeautifulSoup, Tag
 import logging
 from typing import Tuple
 from urllib.parse import urlparse
@@ -72,18 +72,24 @@ class WebExtractor:
         """Extract description from meta tags."""
         # Try standard meta description
         meta_desc = soup.find("meta", attrs={"name": "description"})
-        if meta_desc and meta_desc.get("content"):
-            return meta_desc["content"].strip()
+        if isinstance(meta_desc, Tag):
+            content = meta_desc.get("content")
+            if isinstance(content, str):
+                return content.strip()
 
         # Try Open Graph description
         og_desc = soup.find("meta", attrs={"property": "og:description"})
-        if og_desc and og_desc.get("content"):
-            return og_desc["content"].strip()
+        if isinstance(og_desc, Tag):
+            content = og_desc.get("content")
+            if isinstance(content, str):
+                return content.strip()
 
         # Try Twitter card description
         twitter_desc = soup.find("meta", attrs={"name": "twitter:description"})
-        if twitter_desc and twitter_desc.get("content"):
-            return twitter_desc["content"].strip()
+        if isinstance(twitter_desc, Tag):
+            content = twitter_desc.get("content")
+            if isinstance(content, str):
+                return content.strip()
 
         return ""
 

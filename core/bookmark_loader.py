@@ -177,7 +177,7 @@ class BookmarkLoader:
                             "excerpt": bm.excerpt,
                             "url": bm.url,
                             "folder": "",
-                            "tags": ",".join(bm.tags),
+                            "tags": ",".join(bm.tags or []),
                             "created": "",
                             "highlights": "",
                             "favorite": "",
@@ -202,7 +202,7 @@ class BookmarkLoader:
             True if all files saved successfully, False otherwise
         """
         # Group bookmarks by source file
-        files_dict = {}
+        files_dict: dict[str, list[Bookmark]] = {}
         for bookmark in bookmarks:
             source_file = bookmark.source_file
             if source_file:
@@ -264,14 +264,14 @@ class BookmarkLoader:
         unenriched = BookmarkLoader.filter_unenriched(bookmarks)
 
         # Count by source file
-        file_counts = {}
+        file_counts: dict[str, int] = {}
         for bookmark in bookmarks:
             file_counts[bookmark.source_file] = (
                 file_counts.get(bookmark.source_file, 0) + 1
             )
 
         # Count by domain
-        domain_counts = {}
+        domain_counts: dict[str, int] = {}
         for bookmark in bookmarks:
             domain = bookmark.domain
             if domain:

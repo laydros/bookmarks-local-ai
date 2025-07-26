@@ -3,7 +3,7 @@ Configuration management for bookmark tools.
 """
 
 import os
-import yaml
+import yaml  # type: ignore
 import json
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, asdict

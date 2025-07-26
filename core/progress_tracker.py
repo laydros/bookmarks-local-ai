@@ -87,7 +87,7 @@ class ProgressTracker:
         self.failed = 0
         self.skipped = 0
         self.start_time = time.time()
-        self.last_update = 0
+        self.last_update = 0.0
 
         self._last_message_length = 0
 
