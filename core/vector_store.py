@@ -5,7 +5,7 @@ Vector store operations using ChromaDB and Ollama.
 import chromadb
 import ollama
 import logging
-from typing import List, Dict
+from typing import Any, List, Dict, Optional
 from .models import Bookmark, SimilarBookmark, SearchResult
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ class VectorStore:
 
         # Initialize ChromaDB
         self.client = chromadb.Client()
-        self.collection = None
+        self.collection: Optional[Any] = None
         self._initialize_collection()
 
     def _initialize_collection(self):
@@ -117,7 +117,7 @@ class VectorStore:
             # Get embeddings
             embeddings = self.get_embeddings(documents)
 
-            # Add to collection
+            assert self.collection is not None
             self.collection.add(
                 documents=documents, metadatas=metadatas, ids=ids, embeddings=embeddings
             )
@@ -144,7 +144,7 @@ class VectorStore:
             # Get query embedding
             query_embeddings = self.get_embeddings([query])
 
-            # Search collection
+            assert self.collection is not None
             results = self.collection.query(
                 query_embeddings=query_embeddings, n_results=n_results
             )
@@ -223,6 +223,7 @@ class VectorStore:
             Dictionary with statistics
         """
         try:
+            assert self.collection is not None
             count = self.collection.count()
             return {
                 "total_documents": count,

@@ -38,14 +38,14 @@ class CategorySuggester:
     ) -> List[int]:
         """Cluster embedding vectors."""
         if use_kmeans:
-            from sklearn.cluster import KMeans
+            from sklearn.cluster import KMeans  # type: ignore
 
             kmeans = KMeans(n_clusters=use_kmeans, random_state=42)
             labels = kmeans.fit_predict(embeddings)
             return labels.tolist()
 
         try:
-            import hdbscan
+            import hdbscan  # type: ignore
 
             # More reasonable cluster size: 3-15 bookmarks per cluster
             min_size = max(3, min(15, len(embeddings) // 50))

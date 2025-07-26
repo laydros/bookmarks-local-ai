@@ -6,6 +6,7 @@ import json
 import os
 import re
 from typing import List
+from bs4.element import Tag
 
 from .bookmark_loader import BookmarkLoader
 from .models import Bookmark
@@ -46,13 +47,15 @@ class BookmarkImporter:
             soup = BeautifulSoup(raw, "html.parser")
             bookmarks = []
             for a in soup.find_all("a"):
+                if not isinstance(a, Tag):
+                    continue
                 href = a.get("href")
                 if not href:
                     continue
                 title = a.text.strip()
                 tags_attr = a.get("tags") or a.get("data-tags")
-                tags = tags_attr.split(",") if tags_attr else []
-                bookmarks.append(Bookmark(url=href, title=title, tags=tags))
+                tags = str(tags_attr).split(",") if tags_attr else []
+                bookmarks.append(Bookmark(url=str(href), title=title, tags=tags))
             if bookmarks:
                 return bookmarks
 

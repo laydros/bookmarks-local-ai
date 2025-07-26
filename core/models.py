@@ -2,7 +2,7 @@
 Data models and types for bookmark processing.
 """
 
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -17,7 +17,7 @@ class Bookmark:
     title: str = ""
     description: str = ""
     excerpt: str = ""
-    tags: List[str] = None
+    tags: Optional[List[str]] = None
     bookmark_type: str = "link"
     source_file: str = ""
 
@@ -49,7 +49,7 @@ class Bookmark:
     def to_dict(self, include_source_file: bool = False) -> Dict:
         """Convert bookmark back to dictionary with consistent field ordering."""
         # Start with base fields in preferred order
-        result = {}
+        result: Dict[str, Any] = {}
 
         # URL field (use original field name preference)
         if self.url.startswith("http"):

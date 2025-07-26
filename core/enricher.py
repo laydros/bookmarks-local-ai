@@ -9,7 +9,7 @@ import time
 from typing import List, Optional
 
 import ollama
-import requests
+import requests  # type: ignore
 from bs4 import BeautifulSoup
 
 from .bookmark_loader import BookmarkLoader
@@ -367,7 +367,7 @@ class BookmarkEnricher:
 
         self._process_bookmarks(all_bookmarks, limit=limit)
 
-        if self.loader.save_by_source_file(all_bookmarks):
+        if self.loader.save_by_source_file(all_bookmarks, directory_path):
             logger.info("Results saved back to original files")
         else:
             self.summary.add_error("Failed to save results back to original files")

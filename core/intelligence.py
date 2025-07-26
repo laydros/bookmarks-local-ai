@@ -155,19 +155,15 @@ class BookmarkIntelligence:
                 if search_content:
                     results = self.vector_store.search(search_content, n_results=3)
 
-                    for result in results:
-                        if result.get("distances") and len(result["distances"][0]) > 0:
-                            distance = result["distances"][0][0]
-                            similarity = 1.0 - distance
-
-                            if similarity >= similarity_threshold:
-                                result_id = result["ids"][0][0]
-                                for bookmark in self.bookmarks:
-                                    if (
-                                        bookmark.url == result_id
-                                        or str(hash(bookmark.url)) == result_id
-                                    ):
-                                        return bookmark
+                    for result in results.similar_bookmarks:
+                        if result.similarity_score >= similarity_threshold:
+                            result_id = result.bookmark.url
+                            for bookmark in self.bookmarks:
+                                if (
+                                    bookmark.url == result_id
+                                    or str(hash(bookmark.url)) == result_id
+                                ):
+                                    return bookmark
             except Exception as e:  # noqa: BLE001
                 logger.warning(f"Vector similarity check failed: {e}")
 

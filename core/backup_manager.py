@@ -5,7 +5,7 @@ Backup and safety utilities for bookmark processing.
 import os
 import shutil
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import Any, Dict, List, Optional, cast
 import logging
 
 logger = logging.getLogger(__name__)
@@ -156,7 +156,7 @@ class BackupManager:
         Returns:
             List of backup info dictionaries
         """
-        backups = []
+        backups: list[dict[str, Any]] = []
 
         try:
             for item in os.listdir(self.backup_dir):
@@ -181,7 +181,10 @@ class BackupManager:
                     backups.append(backup_info)
 
             # Sort by creation time (newest first)
-            backups.sort(key=lambda x: x["created"], reverse=True)
+            backups.sort(
+                key=lambda x: cast(datetime, x["created"]),
+                reverse=True,
+            )
 
         except Exception as e:
             logger.error(f"Error listing backups: {e}")
